@@ -17,7 +17,7 @@
 ![現在のHPだけを表示する場合と、減った分を短く残す場合の比較](assets/motion/04_hp.gif)
 
 - **[配置ガイド](references/layout.md)**：HUDやメニューの置き方12項目
-- **[演出カタログ](references/motion-patterns.md)**：ゲームで使える動き100種。うち10種は比較GIF付き
+- **[演出カタログ](references/motion-patterns.md)**：ゲームで使える動き140種。うち10種は比較GIF付き。追加分には窓の開閉、装備・設定、協力、建築、ボス戦の作例も収録
 - **[確認手順](references/review.md)**：連打や入力の違い、動きを減らした状態までチェック
 - **[SKILL.md](SKILL.md)**：AIに使わせる場合の入口。必要な資料だけを開くようにしています
 
