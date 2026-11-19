@@ -1,25 +1,35 @@
 # Game UI Basics
 
-ゲーム内UIを作るための、配置と動きの見本帳。HUD、メニュー、持ち物、操作への反応を扱います。コードを読まなくても見本を使えます。
+ゲーム内UIの配置と動きの見本帳。HUD、メニュー、持ち物、操作への反応を扱います。
 
-## 同じゲーム、違うUI
+## スキルなし・ありを比べる
 
-同じ採掘画面で、見える情報と操作は同じ。Bではよく使う「掘る」を主役にして、燃料・鉱石、車体の状態、強化に必要な数を、それぞれ見る場面に寄せています。
+![同じ採掘ゲームでビーコンの配置を比較。Aは文字で岩の位置を伝え、Bは該当マスに斜線と配置の形を重ねる](assets/comparison-live.png)
 
-![採掘ゲームの配置比較。Aは情報を上部にまとめ、Bは深さ、資源、車体の状態を各所に分ける](assets/layout-comparison.svg)
+**[ブラウザで比べる](https://csoda.github.io/game_ui_basics/)** ｜ [単体HTML](examples/comparison.html)
 
-**[ブラウザで試す](https://csoda.github.io/game_ui_basics/)** ｜ [HTMLファイル](examples/comparison.html)
+Aは一般的な文字中心のUI、Bはスキルの考え方を使ったUI。どちらを操作しても燃料・鉱石・レベル・設置状態は揃います。「燃料不足」「強化の直前」「ビーコン配置」から試せます。スキルの有無を測るベンチマークではなく、同じゲームで見せ方を比べる作例です。
 
-「持ち物を開いて閉じる → 強化 → 掘る×2 → 強化」を両方で試せます。Bでは暗幕とパネルの開閉、鉱石の飛び込み、燃料の減った分の残像、価格の小さな揺れ、強化成功の弾みを見比べられます。図は比較用の配置イメージで、実測の効果を示すものではありません。
+## GIFで見る
 
-## たとえば、減ったHPを見せる
+**[演出の比較GIF 20本](https://csoda.github.io/game_ui_basics/samples.html)**
 
-![現在のHPだけを表示する場合と、減った分を短く残す場合の比較](assets/motion/04_hp.gif)
+![HPの現在値だけを出す表示と、減った分を短く残す表示の比較](assets/motion/04_hp.gif)
+
+HPの残像、長押し、装備を置ける枠、カードから詳細への切り替えなど。見たいGIFだけサンプルページで再生できます。
+
+## ゲームで試す：ほしくず回収便
+
+**[遊ぶ](https://csoda.github.io/game_ui_basics/punipo/)** ｜ [PUNIPO投稿用HTML](https://raw.githubusercontent.com/csoda/game_ui_basics/main/docs/punipo/index.html) ｜ [使った演出15種](examples/punipo-techniques.md)
+
+ドラッグで鉱石を拾い、障害物をかわして50秒で帰還。HPの残像、連続拾得のまとめ表示、強化の3択、スコアの段階集計などが、プレイ中に出てきます。PUNIPO投稿用は外部素材なしのHTML1枚です。
+
+## 作る・見直す
 
 - **[配置ガイド](references/layout.md)**：HUDやメニューの置き方12項目
-- **[演出カタログ](references/motion-patterns.md)**：ゲームで使える動き140種。うち10種は比較GIF付き。追加分には窓の開閉、装備・設定、協力、建築、ボス戦の作例も収録
+- **[演出カタログ](references/motion-patterns.md)**：ゲームで使える動き140種。うち20種は比較GIFあり
 - **[AIがゲームUIを作るときの注意点](references/ai-ui.md)**：GPT語、説明文の減らし方、視覚語彙の使い方を修正例つきで紹介
 - **[確認手順](references/review.md)**：連打や入力の違い、動きを減らした状態までチェック
 - **[SKILL.md](SKILL.md)**：AIに使わせる場合の入口。必要な資料だけを開くようにしています
 
-Codexなどから使うなら、リポジトリを参照できる状態にして「SKILL.md を使って、戦闘HUDの見直しをして」のように依頼してください。
+Codexなどから使うなら、リポジトリを参照できる状態にして「SKILL.md を使って、戦闘HUDを見直して」のように依頼してください。
