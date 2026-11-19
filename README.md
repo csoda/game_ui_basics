@@ -8,7 +8,9 @@
 
 ![採掘ゲームの配置比較。Aは情報を上部にまとめ、Bは深さ、資源、車体の状態を各所に分ける](assets/layout-comparison.svg)
 
-[操作して比べる：ゲームUI比較HTML](examples/comparison.html)（ダウンロードしてブラウザで開く）。「強化 → 掘る×2 → 強化」を両方で試せます。図は比較用の配置イメージで、実測の効果を示すものではありません。
+**[ブラウザで試す](https://csoda.github.io/game_ui_basics/)** ｜ [HTMLファイル](examples/comparison.html)
+
+「強化 → 掘る×2 → 強化」を両方で試せます。図は比較用の配置イメージで、実測の効果を示すものではありません。
 
 ## たとえば、減ったHPを見せる
 
