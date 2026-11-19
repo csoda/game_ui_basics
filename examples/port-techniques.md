@@ -1,6 +1,6 @@
 # ほしみなと管制局：ゲームUI 53種
 
-[遊ぶ](https://csoda.github.io/game_ui_basics/port/) · [単体HTML](../docs/port/index.html) · [演出カタログ](../references/motion-patterns.md)
+[PUNIPOで遊ぶ](https://punipo.com/g/789) · [ブラウザ試遊版](https://csoda.github.io/game_ui_basics/port/) · [単体HTML](../docs/port/index.html) · [演出カタログ](../references/motion-patterns.md)
 
 到着便をドックへ案内し、必要な資材を積み、出港させる70秒のブラウザミニゲーム。燃料・荷物・修理に対応する印のドックは作業が速い。資材を2個使う優先補給は早くて高得点ですが、在庫切れを招きます。出港で得たクレジットは補給倉へ。
 
