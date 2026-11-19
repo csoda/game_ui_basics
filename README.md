@@ -18,6 +18,12 @@ Aは一般的な文字中心のUI、Bはスキルの考え方を使ったUI。�
 
 HPの残像、長押し、装備を置ける枠、カードから詳細への切り替えなど。見たいGIFだけサンプルページで再生できます。
 
+## UIが主役のゲーム：ほしみなと管制局
+
+**[遊ぶ](https://csoda.github.io/game_ui_basics/port/)** ｜ [PUNIPO投稿用HTML](https://raw.githubusercontent.com/csoda/game_ui_basics/main/docs/port/index.html) ｜ [使った演出53種と試し方](examples/port-techniques.md)
+
+入港待ちの船をドックへ振り分け、給油・積み込み・修理をさばきます。資材を節約するか、急ぎの船に使って出港を早めるか。UIの読み方と操作がそのまま攻略になります。
+
 ## ゲームで試す：ほしくず回収便
 
 **[遊ぶ](https://csoda.github.io/game_ui_basics/punipo/)** ｜ [PUNIPO投稿用HTML](https://raw.githubusercontent.com/csoda/game_ui_basics/main/docs/punipo/index.html) ｜ [使った演出15種](examples/punipo-techniques.md)
