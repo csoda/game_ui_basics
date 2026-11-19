@@ -38,7 +38,7 @@ button{font-family:inherit;cursor:pointer}.board button:focus-visible{outline:2p
 .variant-a .a-console { bottom:3.4%; padding:8px; }
 .variant-a .a-status { min-height:19px; padding:0 3px 6px; color:#d2dbea; font-size:11px; line-height:1.25; }
 .variant-a .a-status .a-lamp { width:5px; height:5px; }
-.variant-a .a-actions { display:grid; grid-template-columns:1.12fr 1fr 1fr; gap:6px; }
+.variant-a .a-actions { display:grid; grid-template-columns:1.16fr .98fr 1.06fr .9fr; gap:5px; }
 .variant-a button { padding:4px 6px; min-height:38px; color:#f0f4fd; border:1px solid #63738b; background:linear-gradient(#33445c,#243249); border-radius:5px; font:inherit; font-size:12px; line-height:1.08; font-weight:700; cursor:pointer; }
 .variant-a button:hover { filter:brightness(1.18); }
 .variant-a button:active { transform:translateY(1px); }
@@ -63,6 +63,7 @@ button{font-family:inherit;cursor:pointer}.board button:focus-visible{outline:2p
 .variant-b .vehicle-state b{color:#f4c180}
 .variant-b .dock{position:absolute;left:4%;right:4%;bottom:5%;display:flex;gap:7px;align-items:stretch}
 .variant-b .dock button{min-height:44px;background:#1b2a42;color:#f5ebdc;border:1px solid #56708b;box-shadow:0 3px #101827;font-weight:800}
+.variant-b .dock .refill-button{padding:0 8px;color:#c0ecf0;white-space:nowrap;font-size:12px;min-width:44px}
 .variant-b .dock .bag-button{width:48px;display:grid;place-items:center}
 .variant-b .bag-button svg{width:23px;height:23px}
 .variant-b .dock .mine-button{flex:1;background:#f4b36d;color:#302031;border:2px solid #ffe0a2;box-shadow:inset 0 -5px #d48554,0 3px #101827;font-size:18px}
@@ -114,6 +115,7 @@ button{font-family:inherit;cursor:pointer}.board button:focus-visible{outline:2p
     <button class="a-mine" data-action="mine" type="button">掘る</button>
     <button data-action="bag" type="button">持ち物</button>
     <button data-action="upgrade" type="button">強化 <small><span data-bind="cost">40</span> 鉱石</small></button>
+    <button type="button" data-action="refill" aria-label="燃料補充">補充</button>
   </div>
 </div>
 <section class="a-inventory" data-panel="bag" hidden role="dialog" aria-modal="true" aria-label="持ち物">
@@ -134,6 +136,7 @@ button{font-family:inherit;cursor:pointer}.board button:focus-visible{outline:2p
  <button type="button" class="bag-button" data-action="bag" aria-label="持ち物" aria-expanded="false"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 7h14v10H3zM7 7V4h6v3M3 11h14m-9-1h4v4H8" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg></button>
  <button type="button" class="mine-button" data-action="mine">掘る</button>
  <button type="button" class="upgrade-button" data-action="upgrade">強化 <span><span aria-hidden="true">◆</span><span class="sr">必要鉱石</span> <b data-bind="cost">40</b></span></button>
+ <button type="button" class="refill-button" data-action="refill" aria-label="燃料補充">補充</button>
 </div>
 <div class="bag-layer" data-panel="bag" hidden><span class="bag-shade" aria-hidden="true"></span>
  <div class="bag-dialog" role="dialog" aria-modal="true" aria-label="持ち物">
@@ -143,7 +146,7 @@ button{font-family:inherit;cursor:pointer}.board button:focus-visible{outline:2p
  </div>
 </div>
 </section></article>
-</div><p class="tip">持ち物を開いて閉じる → 強化を押す → 掘る×2 → もう一度強化。左右の進行は別々です。</p></main><script>(() => {
+</div><p class="tip">持ち物を開いて閉じる → 強化を押す → 掘る×2 → もう一度強化。燃料は「補充」で満タン。左右の進行は別々です。</p></main><script>(() => {
 const start=()=>({ore:32,fuel:72,depth:148,level:1,message:'',bag:false,tag:''});
 const boards=[...document.querySelectorAll('.board')];
 const games=boards.map(board=>({board,state:start(),timer:0,trigger:null,closing:false,sequence:0,animations:[],flights:[]}));
@@ -166,6 +169,7 @@ function render(g){
      if(b.dataset.action==='bag')b.setAttribute('aria-expanded',String(s.bag));
    }
    if(b.dataset.action==='mine')b.disabled=s.fuel<5;
+   if(b.dataset.action==='refill')b.disabled=s.fuel>=100;
    if(b.dataset.action==='upgrade')b.dataset.affordable=String(s.ore>=cost(s));
  }
 }
@@ -226,6 +230,7 @@ for(const g of games){
    const a=button.dataset.action,s=g.state;
    if(a==='bag'){toggleBag(g,button);return}
    if(a==='mine'){s.ore+=6;s.depth+=4;s.fuel-=5;flyOre(g);s.message=s.fuel<5?'燃料が足りません':'鉱石 ＋6';signal(g,'mine')}
+   if(a==='refill'){s.fuel=100;s.message='燃料補充';signal(g,'refill')}
    if(a==='upgrade'){
      const price=cost(s);
      if(s.ore<price){s.message='鉱石があと'+(price-s.ore)+'必要';signal(g,'denied')}
