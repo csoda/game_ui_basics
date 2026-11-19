@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ゲームUI 比較GIF見本集 | Game UI Basics</title>
+<style>
+:root{color-scheme:dark;--bg:#111826;--panel:#1a2639;--edge:#405275;--text:#f7f0df;--sub:#c8d0e3;--aqua:#94ecd6;--gold:#ffcb80}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 system-ui,sans-serif}main{max-width:1300px;margin:auto;padding:clamp(14px,4vw,48px)}
+a{color:var(--aqua);text-underline-offset:.18em}a:hover{color:var(--gold)}a:focus-visible,button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}header{border-bottom:1px solid var(--edge);margin-bottom:28px;padding-bottom:24px}
+h1{font-size:clamp(1.8rem,5.8vw,3.25rem);line-height:1.14;margin:18px 0 12px}h2{font-size:1.28rem;margin:28px 0 10px}.intro,.card p{color:var(--sub);margin:6px 0 12px}.breadcrumbs{display:flex;gap:1em;flex-wrap:wrap}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%, 440px),1fr));gap:18px}.card{min-width:0;border:1px solid var(--edge);background:var(--panel);padding:clamp(9px,2vw,18px)}.card h3{font-size:1.05rem;margin:0}.card img{width:100%;height:auto;display:block;border:1px solid var(--edge);background:#101825}.id{color:var(--gold);font:700 .88em ui-monospace,monospace;margin-right:.4em}
+.ctrl{display:flex;gap:1rem;align-items:center;margin-top:12px}.ctrl a{font-size:.88em}.ctrl button{font:inherit;line-height:1.3;background:#263754;color:var(--aqua);padding:.43em .65em;border:1px solid var(--edge);cursor:pointer;min-height:44px}.ctrl button[aria-pressed=true]{color:var(--gold);border-color:var(--gold)}
+</style>
+</head>
+<body><main>
+<header>
+<nav class="breadcrumbs" aria-label="関連ページ"><a href="./">← UI比較デモ</a><a href="https://github.com/csoda/game_ui_basics/blob/main/references/motion-patterns.md">演出カタログ</a></nav>
+<h1>ゲームUI 比較GIF見本集</h1>
+<p class="intro">同じ場面を左右で比較。最初は静止画です。「再生」でその見本だけが動きます。数字は演出カタログの番号。</p>
+</header>
+<h2>追加した10本</h2><div class="grid">
+<article id="p003" class="card"><h3><span class="id">003</span> 長押しの進み具合</h3>
+ <p>確定までの残りを、ボタンのふちに出す。</p>
+ <img width="760" height="390" loading="lazy" decoding="async" src="sample-media/003.webp" alt="カタログ 003：長押しの進み具合の A/B 比較">
+ <div class="ctrl"><button type="button" data-gif="sample-media/003.gif" data-still="sample-media/003.webp" aria-pressed="false">▶ 再生</button><a href="sample-media/003.gif">GIFを開く</a></div></article>
+<article id="p006" class="card"><h3><span class="id">006</span> ドロップ先の受け入れ輪郭</h3>
+ <p>手を離す前に、入る枠を知らせる。</p>
+ <img width="760" height="390" loading="lazy" decoding="async" src="sample-media/006.webp" alt="カタログ 006：ドロップ先の受け入れ輪郭の A/B 比較">
+ <div class="ctrl"><button type="button" data-gif="sample-media/006.gif" data-still="sample-media/006.webp" aria-pressed="false">▶ 再生</button><a href="sample-media/006.gif">GIFを開く</a></div></article>
+<article id="p022" class="card"><h3><span class="id">022</span> カードを広げて詳細へ</h3>
+ <p>選んだカードを残したまま、詳細をひらく。</p>
+ <img width="760" height="390" loading="lazy" decoding="async" src="sample-media/022.webp" alt="カタログ 022：カードを広げて詳細への A/B 比較">
+ <div class="ctrl"><button type="button" data-gif="sample-media/022.gif" data-still="sample-media/022.webp" aria-pressed="false">▶ 再生</button><a href="sample-media/022.gif">GIFを開く</a></div></article>
+<article id="p033" class="card"><h3><span class="id">033</span> 並べ替えの隙間が先に開く</h3>
+ <p>並び順を確定する前に、挿す場所を見せる。</p>
+ <img width="760" height="390" loading="lazy" decoding="async" src="sample-media/033.webp" alt="カタログ 033：並べ替えの隙間が先に開くの A/B 比較">
+ <div class="ctrl"><button type="button" data-gif="sample-media/033.gif" data-still="sample-media/033.webp" aria-pressed="false">▶ 再生</button><a href="sample-media/033.gif">GIFを開く</a></div></article>
+<article id="p044" class="card"><h3><span class="id">044</span> クールダウンの扇形</h3>
+ <p>残り秒数と、ひと目で読める割合を両方出す。</p>
+ <img width="760" height="390" loading="lazy" decoding="async" src="sample-media/044.webp" alt="カタログ 044：クールダウンの扇形の A/B 比較">
+ <div class="ctrl"><button type="button" data-gif="sample-media/044.gif" data-still="sample-media/044.webp" aria-pressed="false">▶ 再生</button><a href="sample-media/044.gif">GIFを開く</a></div></article>
+<article id="p052" class="card"><h3><span class="id">052</span> 被弾方向のトゲ</h3>
+ <p>同じダメージでも、どちらから来たかが分かる。</p>
+ <img width="760" height="390" loading="lazy" decoding="async" src="sample-media/052.webp" alt="カタログ 052：被弾方向のトゲの A/B 比較">
+ <div class="ctrl"><button type="button" data-gif="sample-media/052.gif" data-still="sample-media/052.webp" aria-pressed="false">▶ 再生</button><a href="sample-media/052.gif">GIFを開く</a></div></article>
+<article id="p066" class="card"><h3><span class="id">066</span> 倍率を得点に叩き込む</h3>
+ <p>120 点の何倍なのか、数字が重なる順番で見せる。</p>
+ <img width="760" height="390" loading="lazy" decoding="async" src="sample-media/066.webp" alt="カタログ 066：倍率を得点に叩き込むの A/B 比較">
+ <div class="ctrl"><button type="button" data-gif="sample-media/066.gif" data-still="sample-media/066.webp" aria-pressed="false">▶ 再生</button><a href="sample-media/066.gif">GIFを開く</a></div></article>
+<article id="p079" class="card"><h3><span class="id">079</span> 完了した依頼が完了欄へ移る</h3>
+ <p>消すだけでなく、済んだ依頼がどこへ行ったか見せる。</p>
+ <img width="760" height="390" loading="lazy" decoding="async" src="sample-media/079.webp" alt="カタログ 079：完了した依頼が完了欄へ移るの A/B 比較">
+ <div class="ctrl"><button type="button" data-gif="sample-media/079.gif" data-still="sample-media/079.webp" aria-pressed="false">▶ 再生</button><a href="sample-media/079.gif">GIFを開く</a></div></article>
+<article id="p082" class="card"><h3><span class="id">082</span> 画面外の目印をフチに受け渡す</h3>
+ <p>目的地が画面外に出ても、向く方向が残る。</p>
+ <img width="760" height="390" loading="lazy" decoding="async" src="sample-media/082.webp" alt="カタログ 082：画面外の目印をフチに受け渡すの A/B 比較">
+ <div class="ctrl"><button type="button" data-gif="sample-media/082.gif" data-still="sample-media/082.webp" aria-pressed="false">▶ 再生</button><a href="sample-media/082.gif">GIFを開く</a></div></article>
+<article id="p096" class="card"><h3><span class="id">096</span> 先に空の器を見せる</h3>
+ <p>枠を先に確保し、読み込みでボタンを動かさない。</p>
+ <img width="760" height="390" loading="lazy" decoding="async" src="sample-media/096.webp" alt="カタログ 096：先に空の器を見せるの A/B 比較">
+ <div class="ctrl"><button type="button" data-gif="sample-media/096.gif" data-still="sample-media/096.webp" aria-pressed="false">▶ 再生</button><a href="sample-media/096.gif">GIFを開く</a></div></article>
+</div><h2>基本の10本</h2><div class="grid">
+<article id="p001" class="card"><h3><span class="id">001</span> 押し込み</h3>
+ <p>ボタンの面が沈む</p>
+ <img width="760" height="390" loading="lazy" decoding="async" src="sample-media/001.webp" alt="カタログ 001：押し込みの A/B 比較">
+ <div class="ctrl"><button type="button" data-gif="sample-media/01_button.gif" data-still="sample-media/001.webp" aria-pressed="false">▶ 再生</button><a href="sample-media/01_button.gif">GIFを開く</a></div></article>
+<article id="p002" class="card"><h3><span class="id">002</span> 値段だけ横揺れ</h3>
+ <p>買えなかった理由を価格欄に絞る</p>
+ <img width="760" height="390" loading="lazy" decoding="async" src="sample-media/002.webp" alt="カタログ 002：値段だけ横揺れの A/B 比較">
+ <div class="ctrl"><button type="button" data-gif="sample-media/10_denied.gif" data-still="sample-media/002.webp" aria-pressed="false">▶ 再生</button><a href="sample-media/10_denied.gif">GIFを開く</a></div></article>
+<article id="p011" class="card"><h3><span class="id">011</span> 下線がついてくる</h3>
+ <p>タブの移動先を下線でつなぐ</p>
+ <img width="760" height="390" loading="lazy" decoding="async" src="sample-media/011.webp" alt="カタログ 011：下線がついてくるの A/B 比較">
+ <div class="ctrl"><button type="button" data-gif="sample-media/07_selection.gif" data-still="sample-media/011.webp" aria-pressed="false">▶ 再生</button><a href="sample-media/07_selection.gif">GIFを開く</a></div></article>
+<article id="p021" class="card"><h3><span class="id">021</span> 暗幕と下から出る小窓</h3>
+ <p>操作対象が切り替わったと伝える</p>
+ <img width="760" height="390" loading="lazy" decoding="async" src="sample-media/021.webp" alt="カタログ 021：暗幕と下から出る小窓の A/B 比較">
+ <div class="ctrl"><button type="button" data-gif="sample-media/02_modal.gif" data-still="sample-media/021.webp" aria-pressed="false">▶ 再生</button><a href="sample-media/02_modal.gif">GIFを開く</a></div></article>
+<article id="p031" class="card"><h3><span class="id">031</span> ３枚を順番に配る</h3>
+ <p>３択を短い時間差で表示する</p>
+ <img width="760" height="390" loading="lazy" decoding="async" src="sample-media/031.webp" alt="カタログ 031：３枚を順番に配るの A/B 比較">
+ <div class="ctrl"><button type="button" data-gif="sample-media/05_cards.gif" data-still="sample-media/031.webp" aria-pressed="false">▶ 再生</button><a href="sample-media/05_cards.gif">GIFを開く</a></div></article>
+<article id="p041" class="card"><h3><span class="id">041</span> 減ったHPの残像</h3>
+ <p>今のHPと減った量を同時に見せる</p>
+ <img width="760" height="390" loading="lazy" decoding="async" src="sample-media/041.webp" alt="カタログ 041：減ったHPの残像の A/B 比較">
+ <div class="ctrl"><button type="button" data-gif="sample-media/04_hp.gif" data-still="sample-media/041.webp" aria-pressed="false">▶ 再生</button><a href="sample-media/04_hp.gif">GIFを開く</a></div></article>
+<article id="p061" class="card"><h3><span class="id">061</span> 報酬カードがポンと着地</h3>
+ <p>珍しい報酬を目立たせる</p>
+ <img width="760" height="390" loading="lazy" decoding="async" src="sample-media/061.webp" alt="カタログ 061：報酬カードがポンと着地の A/B 比較">
+ <div class="ctrl"><button type="button" data-gif="sample-media/03_reward.gif" data-still="sample-media/061.webp" aria-pressed="false">▶ 再生</button><a href="sample-media/03_reward.gif">GIFを開く</a></div></article>
+<article id="p062" class="card"><h3><span class="id">062</span> 拾ったものが所持欄へ飛ぶ</h3>
+ <p>拾ったアイテムの行き先を示す</p>
+ <img width="760" height="390" loading="lazy" decoding="async" src="sample-media/062.webp" alt="カタログ 062：拾ったものが所持欄へ飛ぶの A/B 比較">
+ <div class="ctrl"><button type="button" data-gif="sample-media/08_fly.gif" data-still="sample-media/062.webp" aria-pressed="false">▶ 再生</button><a href="sample-media/08_fly.gif">GIFを開く</a></div></article>
+<article id="p063" class="card"><h3><span class="id">063</span> 連続取得をひとつに束ねる</h3>
+ <p>続けて拾った同じ素材をまとめて数える</p>
+ <img width="760" height="390" loading="lazy" decoding="async" src="sample-media/063.webp" alt="カタログ 063：連続取得をひとつに束ねるの A/B 比較">
+ <div class="ctrl"><button type="button" data-gif="sample-media/06_notice.gif" data-still="sample-media/063.webp" aria-pressed="false">▶ 再生</button><a href="sample-media/06_notice.gif">GIFを開く</a></div></article>
+<article id="p071" class="card"><h3><span class="id">071</span> 光が通って鍵が外れる</h3>
+ <p>使えなかった機能の解禁を示す</p>
+ <img width="760" height="390" loading="lazy" decoding="async" src="sample-media/071.webp" alt="カタログ 071：光が通って鍵が外れるの A/B 比較">
+ <div class="ctrl"><button type="button" data-gif="sample-media/09_unlock.gif" data-still="sample-media/071.webp" aria-pressed="false">▶ 再生</button><a href="sample-media/09_unlock.gif">GIFを開く</a></div></article>
+</div></main>
+<script>
+function stop(button){
+ const img=button.closest(".card").querySelector("img");
+ img.src=button.dataset.still;
+ button.setAttribute("aria-pressed","false");
+ button.textContent="▶ 再生";
+}
+document.querySelectorAll(".ctrl button").forEach(button=>button.addEventListener("click",()=>{
+ if(button.getAttribute("aria-pressed")==="true"){stop(button);return}
+ document.querySelectorAll('.ctrl button[aria-pressed="true"]').forEach(stop);
+ const img=button.closest(".card").querySelector("img");
+ img.src=button.dataset.gif;
+ button.setAttribute("aria-pressed","true");
+ button.textContent="■ 停止";
+}));
+const mq=matchMedia("(prefers-reduced-motion: reduce)");
+mq.addEventListener("change",e=>{if(e.matches) document.querySelectorAll('.ctrl button[aria-pressed="true"]').forEach(stop)});
+</script></body></html>
