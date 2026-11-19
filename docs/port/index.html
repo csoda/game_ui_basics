@@ -1,0 +1,878 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover"><title>ほしみなと管制局</title>
+<style>
+:root{color-scheme:dark;--bg:#060d1b;--panel:#101c31;--dark:#0c162a;--line:#35536b;--ink:#e5f1f5;--muted:#9cb6c7;--mint:#75f1c9;--gold:#ffd895;--red:#ff9b93;--fuel:#9fdfff;--cargo:#fbd181;--repair:#bda9ff}
+*{box-sizing:border-box;touch-action:none;scrollbar-width:thin}
+html,body{height:100dvh;margin:0;overflow:hidden;overscroll-behavior:none;background:var(--bg);color:var(--ink);font-family:ui-monospace,monospace}
+body{user-select:none}
+button{appearance:none;min-width:0;background:#1b3247;border:1px solid #53758a;color:var(--ink);border-radius:3px;box-shadow:0 3px #020712;line-height:1.25;font-family:inherit;font-size:12px;font-weight:bold;padding:6px;cursor:pointer}
+button:not(:disabled):active{transform:translateY(2px);box-shadow:0 1px #020712}
+button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+button:disabled{cursor:default;color:#a2b0bf;background:#172538}
+[hidden]{display:none!important}
+#port-stars{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;pointer-events:none}
+#port-console{position:relative;z-index:1;height:100%;max-width:740px;margin:auto;padding:max(8px,env(safe-area-inset-top)) 9px max(8px,env(safe-area-inset-bottom));display:grid;grid-template-rows:minmax(52px,.95fr) minmax(85px,1.6fr) minmax(104px,1.9fr) minmax(113px,1.9fr) minmax(47px,.75fr);gap:7px;opacity:1}
+#port-console.paused{filter:brightness(.55)}
+#port-console section,#port-console header,#port-console footer{min-width:0;border:1px solid var(--line);background:#0e1a30f3}
+#port-console h2,#port-console h1,p,figure{margin:0}
+.port-head{display:grid;grid-template-columns:1fr auto;align-items:center;padding:7px 9px;gap:4px}
+.port-kicker{font-size:9px;letter-spacing:.19em;color:#abc6d5;white-space:nowrap}.port-head h1{font-size:clamp(13px,4vw,17px);line-height:1.2;padding-top:2px;white-space:nowrap}
+#port-points{font-weight:bold;color:var(--gold);font-size:18px;text-align:right}#port-points.ping{animation:portPing .3s ease-out}@keyframes portPing{from{color:#fff3b6;text-shadow:0 0 8px #ffd380;background:#56455f}to{color:var(--gold);text-shadow:none;background:transparent}}
+#port-meter{grid-column:1/3;height:5px;background:#28394d;position:relative;margin-top:1px}
+#port-time-fill{width:100%;height:100%;background:var(--mint)}
+#port-meter i{display:block;position:absolute;top:-2px;width:1px;height:9px;background:#abc9d6;opacity:.55}
+.port-pane{padding:6px 7px;display:grid;grid-template-rows:auto 1fr;gap:5px;position:relative}
+.port-pane-label{display:flex;align-items:center;justify-content:space-between;gap:5px;font-size:11px;white-space:nowrap;min-height:15px}
+.port-eyebrow{font-size:9px;font-weight:bold;letter-spacing:.095em;color:#8fb1c7}
+#port-incoming{color:#adc5d2;font-weight:bold;font-size:10px}
+#port-rows{display:grid;grid-template-rows:repeat(3,minmax(21px,1fr));gap:4px;overflow:visible}
+.port-ship{position:relative;width:100%;display:grid;grid-template-columns:minmax(18px,.08fr) minmax(40px,.32fr) minmax(65px,.38fr) minmax(33px,.22fr);gap:5px;align-items:center;text-align:left;padding:2px 5px;background:#152a40;transition:background .15s;box-shadow:none;overflow:hidden}
+.port-ship b,.port-ship em,.port-ship small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.port-ship em{font-style:normal;font-size:11px}.port-ship small{font-size:10px;text-align:right;color:#b3c9d6}.port-ship b{font-size:11px}
+.port-ship.selected{background:#234353;border-color:var(--mint)}
+.port-ship.selected::after{content:"";border:1px dashed var(--mint);position:absolute;inset:2px;pointer-events:none}
+.port-ship.risk{border-left:5px double var(--red)}.port-ship.risk small{color:#ffd3ba}
+.port-ship.taking{opacity:.2;border-style:dashed}
+.port-ship .patience{position:absolute;bottom:0;left:0;height:2px;background:#80d5bc}
+.port-ship.risk .patience{background:var(--red)}
+.port-empty{background:#0c1525;color:#8ca4b7;border:1px dashed #3b4d65;font-size:10px;padding:3px 7px}
+.port-glyph{display:inline-grid;place-items:center;min-width:16px;font-size:15px;line-height:1}
+.port-fuel{color:var(--fuel)}.port-cargo{color:var(--cargo)}.port-repair{color:var(--repair)}
+.port-dock-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+.port-dock{position:relative;display:grid;align-content:space-between;gap:3px;border:1px solid #507083;background:#182d47;color:var(--ink);text-align:left;box-shadow:none;padding:5px;overflow:visible}
+.port-dock.ready{border-color:var(--mint);background:#1a433e}
+.port-dock.can-drop{outline:2px dashed #78f7c9;outline-offset:-4px}
+.port-dock.drop-over{background:#23534f}
+.port-badge{display:flex;justify-content:space-between;font-size:10px;font-weight:bold;white-space:nowrap}
+.port-dock strong{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.port-dock em{font-size:10px;color:#bbcbd3;font-style:normal;white-space:nowrap}
+.port-dock .remain{position:absolute;left:2px;right:2px;bottom:2px;height:3px;background:#0b1427}
+.port-dock .remain i{display:block;height:100%;background:#8bedcd}
+.port-dock .dial{width:15px;height:15px;display:inline-grid;place-items:center;border-radius:50%;background:conic-gradient(#90ebcd calc(var(--a,0)*1turn),#304c68 0);color:#081626}
+.port-dock .dial::after{content:"";background:#19334a;width:9px;height:9px;border-radius:50%}
+#port-store{grid-template-rows:auto auto 1fr}
+.port-market{display:flex;align-items:center;gap:5px;white-space:nowrap;font-size:10px}
+.port-market>button{font-size:10px;padding:3px 6px;min-height:22px;box-shadow:none}
+.port-market>button.active{border-color:var(--mint);color:var(--mint)}
+#port-credit{margin-left:auto;color:var(--gold);font-size:12px}
+#port-stock{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+.port-good{overflow:visible;text-align:left;display:grid;grid-template-columns:1fr auto;align-content:space-evenly;gap:3px;border-color:#507084;padding:4px 5px;box-shadow:none}
+.port-good .port-price{grid-column:1/3;white-space:nowrap;font-weight:normal;color:#eacba8;font-size:10px}
+.port-good .port-price.poor{color:var(--red)}
+.port-price.shake{display:inline-block;animation:portShake .28s ease-in-out}
+.port-price.changed{animation:portFlip .22s ease-out}
+.port-foot{padding:4px 7px;display:grid;grid-template-columns:1fr auto;align-items:center;gap:6px;position:relative}
+.port-hull{display:flex;align-items:center;gap:3px}
+#port-hull{display:flex;gap:3px}.port-hull i{display:block;width:11px;height:7px;background:var(--red);border:1px solid #ffa8a7}
+.port-hull i.gone{background:#332c43;border-color:#473c55}
+.port-hull i.after{background:#ffe1ad;animation:hullFade .5s both}
+#port-chain{font-size:10px;color:var(--gold);white-space:nowrap;padding-left:3px}
+#port-accepts{font-size:10px;color:var(--mint);letter-spacing:.1em;margin-left:4px}#port-chain.broken{color:#ffa99b}
+#port-speed{display:grid;grid-template-columns:auto repeat(3,minmax(32px,1fr));gap:4px;font-size:9px;color:var(--mint);align-items:center}#port-speed b{min-height:12px;background:linear-gradient(90deg,#315568 var(--remaining,0%),transparent var(--remaining,0%));padding-left:2px;white-space:nowrap}#port-note{font-size:10px;color:#dae5eb;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:3px}
+#port-hud-report{font-size:11px;padding:7px 9px;min-height:29px}
+#port-fx{position:fixed;inset:0;pointer-events:none;z-index:10}
+.port-fly{position:absolute;pointer-events:none;background:#fbe195;color:#243642;border:1px solid #fef1ba;box-shadow:2px 2px #182235;border-radius:2px;padding:1px 4px;font:bold 11px monospace;white-space:nowrap}
+#port-wire{position:absolute;inset:0;width:100%;height:100%}
+#port-glass{position:fixed;z-index:11;left:8px;right:8px;top:8px;bottom:8px;pointer-events:none}
+#port-glass.warn{border:2px dashed #e38480;opacity:.6;border-radius:5px}
+#port-float{position:absolute;pointer-events:none;border:1px solid #c8f6df;color:#eeffed;background:#225f61;box-shadow:4px 7px #1014299a;padding:6px;white-space:nowrap;font-weight:bold;font-size:12px}
+#port-edge{position:absolute;left:16px;right:16px;bottom:64px;animation:portRise .15s both;padding:5px;color:#241628;background:#f8b890;border:1px solid #ffe6cc;text-align:center;font-weight:800;font-size:11px;transform:translateY(0);z-index:3}
+#port-overlay{position:fixed;z-index:5;inset:0;display:grid;place-items:center;padding:clamp(12px,5vw,30px);background:#03071580}
+.port-card{position:relative;width:min(100%,400px);padding:clamp(13px,4vw,24px);background:#101e35;border:2px solid #709cb3;border-radius:4px;box-shadow:0 8px #040a17,inset 0 0 0 3px #182c45;text-align:center}
+.port-card > *+*{margin-top:8px}
+.port-card strong{color:var(--mint)}
+.port-card h1{font-size:clamp(22px,7vw,37px);color:#ffe7a8;line-height:1.12;margin:0}
+.port-card h2{font-size:clamp(19px,6vw,26px);margin:0}
+.port-card p{color:#c4d9df;font-size:12px;line-height:1.45}
+.port-card button{min-height:38px}.port-card button.port-primary{color:#08252a;background:var(--mint);border-color:#aff9dd;padding:7px 19px}
+.port-card .port-launch{width:100%;font-size:17px}
+.port-card .port-hgroup{display:flex;gap:6px}.port-card .port-hgroup button{flex:1;min-height:30px}
+#port-panel-result,#port-panel-buy{animation:portRise .24s ease-out}
+#port-final-score{font-size:clamp(28px,12vw,52px);line-height:1;color:#ffdd97;font-weight:bold}
+#port-final-detail{display:grid;grid-template-columns:1fr 1fr;gap:5px;font-size:11px;color:#caddE8}#port-final-detail span{background:#192d49;padding:3px 4px;min-height:17px}#port-final-detail [data-enter]{animation:portRise .18s ease-out}#port-rank{min-height:22px;font-size:17px;font-weight:bold;color:var(--mint)}
+#port-rank.stamp{animation:portStamp .17s ease-out}
+#port-hold{position:relative;isolation:isolate;background:#194656;border-color:#8ef6d2;overflow:hidden}
+#port-hold::before{content:"";position:absolute;inset:0;z-index:-1;padding:3px;background:conic-gradient(var(--mint) calc(var(--hold,0)*1turn),transparent 0);mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);mask-composite:exclude}
+#port-service-fallback{z-index:12}
+#port-phase{font-size:9px;margin-left:4px;color:var(--mint)}#port-head-clock{font-size:10px;color:#bbcbd7;margin-left:6px;font-weight:bold}
+#port-start-art{image-rendering:pixelated;width:min(100%,255px);height:70px;display:block;margin:4px auto 7px}
+@keyframes portRise{from{opacity:0;translate:0 10px}to{opacity:1;translate:0 0}}
+@keyframes portShake{25%,65%{transform:translateX(-3px)}45%,85%{transform:translateX(3px)}}
+@keyframes portFlip{from{opacity:.38;transform:translateY(3px)}to{opacity:1;transform:none}}
+@keyframes hullFade{to{background:#332c43;border-color:#473c55}}
+@keyframes portStamp{from{opacity:.2;transform:scale(1.24)}to{opacity:1;transform:scale(1)}}
+@media(min-width:600px){#port-console{padding-inline:22px}.port-pane{padding:10px 12px}.port-ship b,.port-dock strong{font-size:15px}}
+@media(max-height:525px){#port-console{gap:5px;padding-block:5px;grid-template-rows:44px minmax(82px,1.35fr) minmax(91px,1.5fr) minmax(94px,1.6fr) 45px}.port-pane{padding-block:4px}.port-card{padding:12px}}
+@media(max-height:460px){#port-console{gap:4px;grid-template-rows:39px minmax(73px,1.3fr) minmax(74px,1.4fr) minmax(84px,1.6fr) 39px}.port-head{padding-block:4px}.port-pane{padding-top:3px}.port-ship b,.port-ship small,.port-dock em,.port-good .port-price{font-size:9px}}
+@media(prefers-reduced-motion:reduce){#port-console *,#port-overlay *{animation:none!important;transition:none!important}button:not(:disabled):active{transform:none}}
+</style></head><body>
+<canvas id="port-stars" aria-hidden="true"></canvas>
+<main id="port-console" hidden>
+<header class="port-head"><div><div class="port-kicker">STAR HARBOR <span id="port-head-clock">70 s</span><span id="port-phase" aria-label="進行区間">Ⅰ</span></div><h1>ほしみなと管制局</h1></div><output id="port-points" aria-label="得点">0</output><div id="port-meter" aria-label="残り時間"><div id="port-time-fill"></div><i style="left:33%"></i><i style="left:66%"></i></div></header>
+<section class="port-pane" aria-labelledby="queue-heading"><div class="port-pane-label"><strong id="queue-heading">到着便</strong><span id="port-incoming"></span></div><div id="port-rows"></div></section>
+<section class="port-pane" aria-labelledby="dock-heading"><div class="port-pane-label"><strong id="dock-heading">ドック</strong><span id="port-control-hint" class="port-eyebrow">船 → ドック</span></div><div id="port-docks" class="port-dock-grid"></div></section>
+<section id="port-store" class="port-pane" aria-labelledby="stock-heading"><div class="port-pane-label"><strong id="stock-heading">補給倉</strong><span id="port-credit"></span></div><div class="port-market" aria-label="仕入れ先"><button class="active" data-vendor="0" aria-pressed="true">港の商店</button><button data-vendor="1" aria-pressed="false">工房</button></div><div id="port-stock"></div></section>
+<footer class="port-foot"><div><div class="port-hull" aria-label="残り見逃し許容数"><span id="port-hull"></span><span id="port-chain"></span><span id="port-accepts"></span></div><div id="port-speed" hidden><span>急速</span><b data-priority="0"></b><b data-priority="1"></b><b data-priority="2"></b></div><div id="port-note" aria-live="polite"></div></div><button id="port-hud-report">航海手帳</button></footer>
+<aside id="port-edge" hidden></aside>
+</main>
+<div id="port-fx" aria-hidden="true"><svg id="port-wire" hidden><line id="port-line" stroke="#9ff5cb" stroke-width="2" stroke-dasharray="5 5"/></svg><div id="port-float" hidden></div></div><div id="port-glass" aria-hidden="true"></div>
+<div id="port-overlay">
+<section id="port-panel-title" class="port-card"><div class="port-kicker">✦　O R B I T A L　D I S P A T C H　✦</div>
+<svg id="port-start-art" viewBox="0 0 150 38" aria-hidden="true" shape-rendering="crispEdges"><path fill="#293f5d" d="M0 29h150v2H0zM12 21h4v8h-4zM136 17h4v12h-4z"/><path fill="#536c91" d="M59 28h36v4H59zM66 22h22v6H66zM72 11h10v11H72zM76 4h2v7h-2z"/><path fill="#72eac9" d="M73 14h8v3h-8zM62 28h3v2h-3zM89 28h3v2h-3z"/><path fill="#314e68" d="M24 18h16v5H24zM27 13h10v5H27zM108 24h23v4h-23zM116 19h8v5h-8z"/><path fill="#ffdda0" d="M29 15h5v2h-5zM118 20h4v2h-4zM9 6h2v2H9zM51 4h2v2h-2zM104 9h2v2h-2zM142 8h2v2h-2z"/></svg>
+<h1>ほしみなと管制局</h1><p>船をドックに案内。<br>補給して、70秒で何隻出せる？</p><button id="port-start" class="port-primary port-launch">管制開始 ▸</button><div class="port-hgroup"><button id="port-title-report">航海手帳</button><button id="port-sound" aria-pressed="false">♪ OFF</button></div></section>
+<section id="port-panel-result" class="port-card" hidden><div class="port-kicker">END OF SHIFT</div><h2 id="port-final-title"></h2><div id="port-final-score"></div><div id="port-final-detail"><span></span><span></span></div><div id="port-rank"></div><p>B 800　A 1,400　S 2,100</p><button id="port-retry" class="port-primary" hidden>次の便 ▸</button></section>
+<section id="port-panel-buy" class="port-card" role="dialog" aria-modal="true" aria-labelledby="port-buy-title" hidden><div class="port-kicker">RESTOCK</div><h2 id="port-buy-title"></h2><p id="port-buy-detail"></p><div class="port-hgroup"><button id="port-buy-back">戻る</button><button id="port-hold">長押しで仕入れ</button></div><button id="port-buy-key" hidden>仕入れを確定</button></section>
+<section id="port-panel-deal" class="port-card" role="dialog" aria-modal="true" aria-label="船の補給" hidden><h2 id="port-deal-title"></h2><p id="port-deal-detail"></p><div class="port-hgroup"><button id="port-deal-normal">通常</button><button id="port-deal-fast">急速</button></div><button id="port-deal-close">戻る</button></section>
+</div>
+<script>
+'use strict';
+const Q=s=>document.querySelector(s), portCanvas=Q('#port-stars'), pg=portCanvas.getContext('2d',{alpha:false});
+const reduce=matchMedia('(prefers-reduced-motion: reduce)'), solo=parent===window;
+const names=['ミント','コメット','ペブル','クレセント','カナリア','ノヴァ','マル','ポラリス','クォーツ','スピカ','ルーチェ','ペコ','キャロット','モモ','ライム','ソラ'];
+const goods=['fuel','cargo','repair'], symbols={fuel:'◈',cargo:'▣',repair:'✚'}, look={fuel:'燃料',cargo:'荷物',repair:'修理'}, vals={fuel:'fuel',cargo:'cargo',repair:'parts'}, prices=[[2,2,4],[4,3,2]], batch=[3,3,3], DUR=70;
+const $ui={console:Q('#port-console'),overlay:Q('#port-overlay'),title:Q('#port-panel-title'),finish:Q('#port-panel-result'),buy:Q('#port-panel-buy'),deal:Q('#port-panel-deal'),queue:Q('#port-rows'),dock:Q('#port-docks'),store:Q('#port-stock'),float:Q('#port-float'),wire:Q('#port-wire'),line:Q('#port-line'),edge:Q('#port-edge')};
+let state,mode='title', previousMode='title',runs=[],raf=0,stamp=0,scene=0,drawW=320,drawH=548,particles=[],ac,muted=true,sent=false,holdId=null,holdBegan=0,holdProgress=0,buyItem=null,beginCheckout=0,lastServiceRender=-99,chosenVendor=0,activeShip=null,drag=null,chainBroke=0,damageAt=-99,notices=[],creditGain=0,creditBatch=-99,keyboardMode=false,reportOpen=false,settle=0,settleDetails=null,renderDirty=true,lastPaint=-10;
+const clamp=(x,min,max)=>Math.min(max,Math.max(min,x)),fmt=x=>Math.floor(x).toLocaleString('ja-JP'); const gc=(kind)=>'port-'+kind;
+function size(){if(mode==='done')return;let b=portCanvas.getBoundingClientRect(),s=Math.max(.92,b.width/450);drawW=Math.max(1,Math.round(b.width/s));drawH=Math.max(1,Math.round(b.height/s));portCanvas.width=drawW;portCanvas.height=drawH;pg.imageSmoothingEnabled=false;particles=Array.from({length:Math.floor(drawW*drawH/950)},(_,i)=>[Math.random()*drawW,Math.random()*drawH,Math.random()*.75+.2,(i*3)%7===0]);if(!raf)backdrop()}
+function rr(x,y,w,h,c){pg.fillStyle=c;pg.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h))}
+function backdrop(){
+ pg.fillStyle='#080f21';pg.fillRect(0,0,drawW,drawH);
+ for(const [x,y,s,large] of particles){const xx=(x+(reduce.matches?0:scene*s*9))%drawW;rr(xx,y,large?2:1,large?2:1,large?'#7a99bf':'#334362')}
+ if(mode==='title'){rr(drawW*.06,drawH*.78,drawW*.88,2,'#374f73');for(let i=0;i<11;i++){let x=drawW*(.08+i*.082);rr(x,drawH*.765-(i%3)*6,8,drawH*.033,'#182c49');rr(x+1,drawH*.767-(i%3)*6,3,2,i%2?'#c1b282':'#609dba')}}
+}
+function audio(){try{if(!ac){const A=window.AudioContext||window.webkitAudioContext;if(A)ac=new A}if(ac?.state==='suspended')ac.resume().catch(()=>{})}catch{}}
+function tone(hz,end=0,d=.11){if(muted||ac?.state!=='running')return;const o=ac.createOscillator(),v=ac.createGain(),n=ac.currentTime;o.type='triangle';o.frequency.setValueAtTime(hz,n);if(end)o.frequency.exponentialRampToValueAtTime(end,n+d);v.gain.setValueAtTime(.0001,n);v.gain.exponentialRampToValueAtTime(.055,n+.01);v.gain.exponentialRampToValueAtTime(.0001,n+d);o.connect(v);v.connect(ac.destination);o.start();o.stop(n+d+.03)}
+function init(){
+ state={elapsed:0,next:5.1,id:0,queue:[],docks:[null,null,null],score:0,served:0,missed:0,credits:9,fuel:3,cargo:3,parts:3,selected:null,chain:0,sec:DUR,events:[],frames:[],sample:-1};
+ mode='play';sent=false;chosenVendor=0;document.querySelectorAll('[data-vendor]').forEach((n,i)=>{n.classList.toggle('active',i===0);n.setAttribute('aria-pressed',String(i===0))});reportOpen=false;holdId=null;buyItem=null;activeShip=null;drag=null;keyboardMode=false;settle=0;creditGain=0;creditBatch=-99;damageAt=-99;chainBroke=0;notices=[];renderDirty=true;
+ $ui.dock.textContent=''; $ui.store.textContent='';$ui.queue.textContent='';Q('#port-fx').querySelectorAll('.port-fly').forEach(e=>e.remove());
+ $ui.title.hidden=$ui.finish.hidden=$ui.buy.hidden=$ui.deal.hidden=$ui.overlay.hidden=true;$ui.console.hidden=false;$ui.console.classList.remove('paused');Q('#port-glass').classList.remove('warn');
+ initDocks();initStock();arrive('fuel');arrive('cargo');say('船を選んで、同じ印のドックへ。',6.5);tone(294,620,.18);
+ if(!raf){stamp=performance.now();raf=requestAnimationFrame(tick)}
+}
+function requestStart(){if(mode!=='title')return;audio();init()}
+function backTitle(){if(!solo||mode!=='done')return;mode='title';$ui.console.hidden=true;$ui.console.inert=false;$ui.console.classList.remove('terminal','paused');$ui.finish.hidden=true;$ui.title.hidden=false;$ui.overlay.hidden=false;Q('#port-glass').classList.remove('warn');size();stamp=performance.now();raf=requestAnimationFrame(tick);}
+Q('#port-start').addEventListener('pointerdown',e=>{e.preventDefault();requestStart()});Q('#port-start').onclick=requestStart;
+Q('#port-retry').addEventListener('pointerdown',e=>{e.preventDefault();backTitle()});Q('#port-retry').onclick=backTitle;
+Q('#port-sound').addEventListener('pointerdown',audio);Q('#port-sound').onclick=()=>{muted=!muted;audio();Q('#port-sound').setAttribute('aria-pressed',String(!muted));Q('#port-sound').textContent=muted?'♪ OFF':'♪ ON';tone(510,640)};
+function arrive(force){
+ const i=state.id++, request=force||(i<3?goods[i]:goods[(i+Math.floor(Math.random()*2))%3]);const patience=clamp(22-state.elapsed*.065+(i%3)*1.5,16,25);
+ const ship={id:i,name:names[i%names.length],type:i%4===3?'急行':'定期便',request,patience,max:patience,berth:-1,service:'waiting',arrived:state.elapsed};
+ if(state.queue.length>=3){miss(ship,'満港');return false}
+ state.queue.push(ship);renderDirty=true;return true;
+}
+function event(kind,name){state.events.push({elapsed:state.elapsed,kind,name,score:state.score})}
+function say(text,ttl=3){notices.push({text,until:state.elapsed+ttl});if(notices.length>4)notices.shift()}
+function miss(ship,reason='離脱'){
+ if(!state||mode==='end'||mode==='done')return;
+ const old=state.chain;state.chain=0;if(old>=2)chainBroke=state.elapsed+.7;
+ state.missed++;damageAt=state.elapsed;event('miss',ship.name);if(state.selected===ship.id)state.selected=null;
+ say(ship.name+'：'+reason);tone(120,75,.2);renderDirty=true;if(state.missed>=5)finish(false);
+}
+function shipRow(ship){
+ const b=document.createElement('button');b.dataset.ship=ship.id;b.className='port-ship';b.innerHTML='<span class="port-glyph '+gc(ship.request)+'">'+symbols[ship.request]+'</span><b>'+ship.name+'</b><em class="'+gc(ship.request)+'">'+look[ship.request]+'</em><small></small><i class="patience"></i>';
+ b.setAttribute('aria-label',ship.name+' '+look[ship.request]);b.addEventListener('pointerdown',e=>dragStart(e,ship,b));b.onclick=()=>{if(b.dataset.ignore==='1'){b.dataset.ignore='';return}if(mode==='play'&&!reportOpen)chooseShip(ship.id)};return b;
+}
+function chooseShip(id){if(!state.queue.some(s=>s.id===id))return;state.selected=state.selected===id?null:id;tone(332,395,.05);renderDirty=true}
+function initDocks(){
+ goods.forEach((request,i)=>{const b=document.createElement('button');b.className='port-dock';b.dataset.dock=i;b.innerHTML='<span class="port-badge"><span>DOCK '+(i+1)+'</span><span class="port-glyph '+gc(request)+'">'+symbols[request]+'</span></span><strong></strong><em></em><span class="remain"><i></i></span>';b.onclick=()=>dockClick(i);$ui.dock.append(b)});
+}
+function initStock(){
+ goods.forEach((request,i)=>{const b=document.createElement('button');b.className='port-good';b.dataset.good=i;b.innerHTML='<span class="'+gc(request)+'">'+symbols[request]+' '+look[request]+'</span><b></b><span class="port-price"></span>';b.onclick=()=>offerBuy(i);$ui.store.append(b)});
+}
+function dockClick(i){
+ if(mode!=='play'||reportOpen)return;
+ const ship=state.docks[i];if(ship){
+  if(ship.service==='ready')depart(i);
+  else if(ship.service==='docked')openService(ship);
+  return;
+ }
+ if(state.selected!==null&&dispatch(state.selected,i))openService(state.docks[i]);
+ else say('先に到着便を選ぶ。',1.3)
+}
+function dispatch(id,i){
+ if(mode!=='play'||state.docks[i]||!Number.isInteger(i)||i<0||i>=3)return false;
+ const j=state.queue.findIndex(s=>s.id===id);if(j<0)return false;
+ const ship=state.queue.splice(j,1)[0];ship.berth=i;ship.service='docked';ship.urgency=clamp(1-ship.patience/ship.max,0,1);ship.patience=Math.max(8,ship.patience);state.docks[i]=ship;state.selected=null;
+ event('dock',ship.name);say(ship.name+'：接岸');tone(270,430);renderDirty=true;return true;
+}
+function rates(ship){const quick=goods[ship.berth]===ship.request;const long=quick?4.2:6.1;return {standard:{score:100,seconds:long,cost:1},priority:{score:150,seconds:Math.round(long*5.5)/10,cost:2}}}
+function snapshot(ship){return {best:runs.reduce((b,r)=>Math.max(b,r.score),0),runs:runs.slice(),score:state?.score||0,served:state?.served||0,missed:state?.missed||0,sec:state?.sec??DUR,credits:state?.credits??9,fuel:state?.fuel??3,cargo:state?.cargo??3,parts:state?.parts??3,frames:state?.frames.slice()||[],events:state?.events.slice()||[],...(ship?{rates:rates(ship),resource:vals[ship.request]}:{})}}
+function openService(ship){
+ if(mode!=='play'||ship.service!=='docked')return;
+ activeShip=ship;lastServiceRender=state.elapsed;mode='service';$ui.console.classList.add('paused');if('inert' in $ui.console)$ui.console.inert=true;
+ const commit=(opt)=>commitService(ship,opt);const close=()=>closeService();
+ if(window.portService)window.portService.open({...ship},snapshot(ship),commit,close);
+ else {$ui.overlay.hidden=false;$ui.deal.hidden=false;Q('#port-deal-title').textContent=ship.name+' ／ '+look[ship.request];Q('#port-deal-detail').textContent='通常 1個　急速 2個';Q('#port-deal-normal').focus()}
+}
+function commitService(ship,opt){
+ const kind=opt?.kind;if(!['priority','standard'].includes(kind)||mode!=='service'||activeShip!==ship||ship.service!=='docked'||state.docks[ship.berth]!==ship)return {ok:false,reason:'この便は補給できません'};
+ const rate=rates(ship)[kind], key=vals[ship.request];if(state[key]<rate.cost)return {ok:false,reason:look[ship.request]+'が '+(rate.cost-state[key])+' 個不足'};
+ state[key]-=rate.cost;ship.service='active';ship.rem=ship.total=rate.seconds;ship.reward=rate.score;ship.priority=kind==='priority';ship.readyAge=0;
+ fly($ui.store.children[goods.indexOf(ship.request)],$ui.dock.children[ship.berth],'−'+rate.cost,220);event('supply',ship.name);say(ship.name+'：補給開始');tone(280,490,.13);renderDirty=true;return {ok:true};
+}
+function closeService(){
+ if(mode!=='service')return;const ix=activeShip?.berth;activeShip=null;mode='play';$ui.deal.hidden=true;$ui.overlay.hidden=true;$ui.console.classList.remove('paused');$ui.console.inert=false;
+ $ui.dock.children[ix]?.focus({preventScroll:true});
+}
+for(const [id,kind] of [['#port-deal-normal','standard'],['#port-deal-fast','priority']])Q(id).onclick=()=>{let r=commitService(activeShip,{kind});if(r.ok)closeService();else Q('#port-deal-detail').textContent=r.reason};
+Q('#port-deal-close').onclick=closeService;
+function depart(i){
+ const ship=state.docks[i];if(mode!=='play'||ship?.service!=='ready')return false;
+ state.docks[i]=null;state.chain++;const times=Math.min(4,1+Math.floor((state.chain-1)/3)),earned=ship.reward*times;
+ state.score+=earned;state.served++;state.credits+=2;event('depart',ship.name);fly($ui.dock.children[i],Q('#port-points'),'+'+earned,310);
+ if(state.elapsed-creditBatch<.32){creditGain+=2;}else creditGain=2;creditBatch=state.elapsed;
+ say(ship.name+'：出港');tone(410,520+Math.min(state.chain,9)*24,.14);renderDirty=true;return true;
+}
+function dragStart(e,ship,b){
+ if(mode!=='play'||drag||e.button>0)return;
+ keyboardMode=false;drag={id:e.pointerId,ship,from:b,x:e.clientX,y:e.clientY,sx:e.clientX,sy:e.clientY,held:false,dock:-1,ghostUntil:0};
+ b.dataset.ignore=''; b.setPointerCapture?.(e.pointerId);
+}
+function toDock(x,y){
+ return [...$ui.dock.children].findIndex(b=>{const r=b.getBoundingClientRect();return x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom});
+}
+function wire(ax,ay,bx,by,dotted=true){for(const [k,v] of Object.entries({x1:ax,y1:ay,x2:bx,y2:by}))$ui.line.setAttribute(k,v);$ui.line.setAttribute('stroke-dasharray',dotted?'5 5':'none');$ui.wire.hidden=false}
+let solidWire=0;
+window.addEventListener('pointermove',e=>{
+ const d=drag;if(!d||d.id!==e.pointerId||mode!=='play')return;
+ d.x=e.clientX;d.y=e.clientY;
+ if(!d.held&&Math.hypot(d.x-d.sx,d.y-d.sy)<7)return;
+ if(!d.held){d.held=true;d.from.dataset.ignore='1';d.from.classList.add('taking');$ui.float.textContent=symbols[d.ship.request]+' '+d.ship.name;$ui.float.hidden=false}
+ $ui.float.style.left=(d.x+5)+'px';$ui.float.style.top=(d.y-16)+'px';d.dock=toDock(d.x,d.y);
+ [...$ui.dock.children].forEach((b,i)=>{b.classList.toggle('can-drop',!state.docks[i]);b.classList.toggle('drop-over',i===d.dock&&!state.docks[i])});
+ $ui.wire.hidden=true;if(d.dock>=0&&!state.docks[d.dock]){const r=$ui.dock.children[d.dock].getBoundingClientRect();wire(d.x,d.y,r.x+r.width/2,r.y+r.height/2)}
+});
+function endDrag(e,ok){
+ const d=drag;if(!d||e.pointerId!==d.id)return;drag=null;if(!d.held)return;
+ [...$ui.dock.children].forEach(b=>b.classList.remove('can-drop','drop-over'));$ui.wire.hidden=true;
+ if(ok&&d.dock>=0&&dispatch(d.ship.id,d.dock)){
+  $ui.float.hidden=true;const r=$ui.dock.children[d.dock].getBoundingClientRect();wire(d.sx,d.sy,r.x+r.width/2,r.y+r.height/2,false);solidWire=scene+.28;
+  return; // Drag lets a player keep dispatching; tap the berth here to enter service.
+ }
+ const r=d.from.getBoundingClientRect();const a=!reduce.matches&&$ui.float.animate?.([{left:(d.x+5)+'px',top:(d.y-16)+'px'},{left:r.x+'px',top:r.y+'px',opacity:.25}],{duration:170,easing:'ease-out'});
+ const done=()=>{if(!drag){$ui.float.hidden=true;d.from.classList.remove('taking')}};
+ if(a)a.finished.then(done,done);else done();
+}
+window.addEventListener('pointerup',e=>endDrag(e,true));
+window.addEventListener('pointercancel',e=>endDrag(e,false));
+window.addEventListener('keydown',e=>{if(e.key==='Tab'||e.key.startsWith('Arrow')){keyboardMode=true;renderDirty=true}if(e.key==='Escape'){if(mode==='buy')closeBuy();else if(mode==='service'){window.portService?.dismiss?.();closeService()}}});
+window.addEventListener('pointerdown',()=>{if(keyboardMode){keyboardMode=false;renderDirty=true}},true);
+function fly(from,to,word,ms=300){
+ if(!from||!to)return;
+ const landed=()=>{f.remove();if(mode!=='done'&&mode!=='end'&&to.id==='port-points'){to.classList.remove('ping');void to.offsetWidth;to.classList.add('ping')}};
+ const f=document.createElement('i');f.className='port-fly';f.textContent=word;Q('#port-fx').append(f);
+ const a=from.getBoundingClientRect(),b=to.getBoundingClientRect(),sx=a.x+a.width*.52,sy=a.y+a.height*.5,ex=b.x+b.width*.48,ey=b.y+b.height*.45;
+ f.style.left=(reduce.matches?ex:sx)+'px';f.style.top=(reduce.matches?ey:sy)+'px';
+ if(!reduce.matches&&f.animate){const x=ex-sx,y=ey-sy,z=f.animate([{transform:'translate(0,0)',opacity:1},{transform:'translate('+(x*.56)+'px,'+(y*.5-23)+'px)'},{transform:'translate('+x+'px,'+y+'px)',opacity:.45}],{duration:ms,easing:'ease-out'});z.finished.then(landed,()=>f.remove());}
+ else setTimeout(landed,ms);
+}
+function setVendor(i){
+ if(mode!=='play'||chosenVendor===i)return;chosenVendor=i;
+ document.querySelectorAll('[data-vendor]').forEach((n,j)=>{n.classList.toggle('active',i===j);n.setAttribute('aria-pressed',String(i===j))});
+ $ui.store.querySelectorAll('.port-price').forEach(n=>{n.classList.remove('changed');void n.offsetWidth;n.classList.add('changed')});renderDirty=true;
+}
+document.querySelectorAll('[data-vendor]').forEach((n,i)=>n.onclick=()=>setVendor(i));
+function offerBuy(i){
+ if(mode!=='play'||!Number.isInteger(i)||i<0||i>2)return;
+ const price=prices[chosenVendor][i];if(state.credits<price){
+  const label=$ui.store.children[i].querySelector('.port-price');label.classList.remove('shake');void label.offsetWidth;label.classList.add('shake');tone(154,117);return;
+ }
+ const item=goods[i];buyItem={i,item,price,button:$ui.store.children[i]}; mode='buy';beginCheckout=0;holdProgress=0;holdId=null;
+ $ui.console.classList.add('paused');$ui.console.inert=true;$ui.overlay.hidden=false;$ui.buy.hidden=false;
+ Q('#port-hold').style.setProperty('--hold','0');
+ Q('#port-hold').textContent='長押しで仕入れ';Q('#port-hold').disabled=false;Q('#port-buy-key').hidden=!keyboardMode;Q('#port-buy-key').disabled=false;Q('#port-buy-back').disabled=false;
+ Q('#port-buy-title').textContent=look[item]+' ×'+batch[i];Q('#port-buy-detail').textContent=price+' cr　→　残り '+(state.credits-price)+' cr';
+ Q('#port-hold').focus({preventScroll:true});
+}
+function closeBuy(){
+ if(mode!=='buy'||beginCheckout)return;const b=buyItem?.button;buyItem=null;holdId=null;mode='play';$ui.console.classList.remove('paused');$ui.console.inert=false;$ui.overlay.hidden=true;$ui.buy.hidden=true;b?.focus({preventScroll:true});renderDirty=true;
+}
+Q('#port-buy-back').onclick=closeBuy;
+const hold=Q('#port-hold');
+hold.addEventListener('pointerdown',e=>{if(mode!=='buy'||beginCheckout||e.button>0)return;e.preventDefault();holdId=e.pointerId;holdBegan=scene;holdProgress=0;hold.setPointerCapture?.(holdId)});
+for(const ev of ['pointerup','pointercancel','lostpointercapture'])hold.addEventListener(ev,e=>{if(e.pointerId===holdId){holdId=null;holdProgress=0;hold.style.setProperty('--hold','0')}});
+hold.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();buy()}});
+Q('#port-buy-key').onclick=buy;
+function buy(){
+ if(mode!=='buy'||!buyItem||beginCheckout||state.credits<buyItem.price)return false;
+ holdId=null;holdProgress=1;hold.style.setProperty('--hold','1');hold.textContent='搬入中…';hold.disabled=true;Q('#port-buy-key').disabled=true;Q('#port-buy-back').disabled=true;beginCheckout=scene+.34;
+ fly(Q('#port-credit'),buyItem.button,'−'+buyItem.price+' cr',290);tone(270,350);return true;
+}
+function buyDone(){
+ if(!buyItem||mode!=='buy')return;
+ const {i,item,price}=buyItem;beginCheckout=0;state.credits-=price;state[vals[item]]+=batch[i];event('supply',look[item]);say(look[item]+' +'+batch[i]);tone(370,620);closeBuy();renderDirty=true;
+}
+function showReports(){
+ if(reportOpen||!['title','play'].includes(mode)||!window.portReports)return;
+ previousMode=mode;reportOpen=true;mode='reports';$ui.console.classList.add('paused');$ui.console.inert=true;$ui.overlay.hidden=true;
+ window.portReports.open(snapshot(),()=>{if(!reportOpen)return;reportOpen=false;mode=previousMode;$ui.console.classList.remove('paused');$ui.console.inert=false;$ui.overlay.hidden=mode!=='title';Q(mode==='title'?'#port-title-report':'#port-hud-report').focus({preventScroll:true});renderDirty=true;});
+}
+Q('#port-title-report').onclick=showReports;Q('#port-hud-report').onclick=showReports;
+function advance(dt){
+ if(!['play','service','buy'].includes(mode))return;
+ state.elapsed=Math.min(DUR,state.elapsed+dt);state.sec=DUR-state.elapsed;
+ if(state.sample!==Math.floor(state.elapsed)){state.sample=Math.floor(state.elapsed);state.frames.push({elapsed:state.elapsed,score:state.score,served:state.served,missed:state.missed})}
+ if(state.elapsed>=DUR){finish(true);return}
+ if(state.elapsed>=state.next){arrive();state.next+=Math.max(3.85,5.3-state.elapsed*.019)+Math.random()*.35}
+ if(mode==='end'||mode==='done')return;
+ for(let j=state.queue.length-1;j>=0;j--){
+  const ship=state.queue[j];ship.patience-=dt;if(ship.patience<=0){state.queue.splice(j,1);if(drag?.ship===ship)endDrag({pointerId:drag.id},false);miss(ship,'離脱');if(mode==='end')return}
+ }
+ for(let i=0;i<3;i++){
+  const ship=state.docks[i];if(!ship)continue;
+  if(ship.service==='active'){ship.rem-=dt;if(ship.rem<=0){ship.rem=0;ship.service='ready';ship.readyAge=0;say(ship.name+'：出港可');tone(550,690,.12)}}
+  else if(ship.service==='ready'){ship.readyAge+=dt;}
+ }
+ renderDirty=true;
+}
+function render(){
+ if(!state||mode==='title'||mode==='done'||reportOpen)return;
+ const n=state.queue.length;const doc=document;
+ const wanted=new Set(state.queue.map(s=>String(s.id)));
+ for(const b of [...$ui.queue.children]){if(b.dataset.ship!==undefined&&!wanted.has(b.dataset.ship))b.remove();if(b.classList.contains('port-empty'))b.remove()}
+ for(const ship of state.queue){
+  let b=$ui.queue.querySelector('[data-ship="'+ship.id+'"]');if(!b){b=shipRow(ship);$ui.queue.append(b)}
+  b.classList.toggle('selected',state.selected===ship.id);b.setAttribute('aria-pressed',String(state.selected===ship.id));b.classList.toggle('risk',ship.patience<6);
+  b.querySelector('small').textContent=Math.ceil(ship.patience)+'s';b.querySelector('i').style.width=(ship.patience/ship.max*100)+'%';
+ }
+ for(let i=n;i<3;i++){const b=doc.createElement('div');b.className='port-empty';b.textContent=i===0?'— 到着待ち':'—';$ui.queue.append(b)}
+ const next=Math.max(0,state.next-state.elapsed);Q('#port-incoming').textContent='▸ 次便 '+Math.ceil(next)+'s';
+ const incomingAtEdge=n===3&&next<3&&mode==='play';
+ $ui.edge.hidden=!incomingAtEdge;Q('#port-incoming').style.visibility=incomingAtEdge?'hidden':'visible';
+ if(incomingAtEdge)$ui.edge.textContent='▸ 次便 '+Math.ceil(next)+'s ／ 到着枠が満杯';
+ [...$ui.dock.children].forEach((b,i)=>{
+  const ship=state.docks[i];let main=b.querySelector('strong'),detail=b.querySelector('em'),remain=b.querySelector('.remain i');
+  b.classList.toggle('ready',ship?.service==='ready');b.classList.toggle('vacant',!ship);
+  main.textContent=ship?ship.name:'空き';b.querySelector('.port-glyph').textContent=symbols[goods[i]];
+  const p=ship?.service==='active'?Math.max(0,ship.rem/ship.total):0;remain.style.width=p*100+'%';
+  const tag=ship?.service==='ready'?'出港 ▸':ship?.service==='active'?Math.ceil(ship.rem)+'s':ship?'補給 ▸':look[goods[i]]+'が得意';
+  if(ship?.service==='active'){
+   if(!detail.querySelector('.dial'))detail.innerHTML='<i class="dial" aria-hidden="true"></i> <span></span>';
+   detail.querySelector('.dial').style.setProperty('--a',1-p);detail.querySelector('span').textContent=tag;
+  }else detail.textContent=tag;
+  b.setAttribute('aria-label','ドック'+(i+1)+' '+main.textContent+' '+tag)
+ });
+ const left=Q('#port-head-clock');left.textContent=Math.ceil(state.sec)+' s';Q('#port-phase').textContent=state.elapsed>=DUR*2/3?'Ⅲ':state.elapsed>=DUR/3?'Ⅱ':'Ⅰ';Q('#port-time-fill').style.width=(state.sec/DUR*100)+'%';Q('#port-time-fill').style.background=state.sec<10?'var(--red)':'var(--mint)';
+ Q('#port-points').textContent=fmt(state.score);Q('#port-accepts').textContent=state.elapsed-creditBatch<.55?'·'.repeat(Math.min(6,creditGain/2)):'';Q('#port-credit').textContent=fmt(state.credits)+' cr'+(state.elapsed-creditBatch<.55?' +'+creditGain:'');
+ Q('#port-control-hint').textContent=keyboardMode?'Tab / Enter':'船 → ドック';
+ [...$ui.store.children].forEach((b,i)=>{
+  const available=state[vals[goods[i]]],price=prices[chosenVendor][i],short=Math.max(0,price-state.credits),el=b.querySelector('.port-price');
+  b.querySelector('b').textContent='×'+available;el.textContent=price+' cr'+(short?' · '+short+'不足':'');el.classList.toggle('poor',!!short);
+ });
+ Q('#port-hull').innerHTML=Array.from({length:5},(_,i)=>'<i class="'+(i>=5-state.missed?'gone':'')+(i===5-state.missed&&state.elapsed-damageAt<.48?' after':'')+'"></i>').join('');
+ Q('#port-glass').classList.toggle('warn',state.missed===4);
+ const chain=Q('#port-chain'), broken=chainBroke>state.elapsed;
+ chain.textContent=state.chain?Array.from({length:Math.min(5,state.chain)},()=> '▪').join('━')+(state.chain>1?'  '+state.chain+'連':''):broken?'▪━━╳━━▪':'';
+ chain.dataset.count=state.chain;
+ chain.classList.toggle('broken',broken);
+ const statuses=state.docks.map(o=>o?.service==='active'&&o.priority?o:null), effect=Q('#port-speed');
+ effect.hidden=!statuses.some(Boolean);if(!effect.hidden)statuses.forEach((status,i)=>{const slot=effect.querySelector('[data-priority="'+i+'"]');slot.style.setProperty('--remaining',status?clamp(status.rem/status.total,0,1)*100+'%':'0%');slot.textContent=status?(i+1)+'·'+status.rem.toFixed(1)+'s':''});
+ const live=notices.filter(o=>o.until>=state.elapsed);notices=live;
+ Q('#port-note').textContent=live.length?live[live.length-1].text:'';
+ if(mode==='service'&&activeShip&&window.portService?.update&&state.elapsed-lastServiceRender>.45){lastServiceRender=state.elapsed;window.portService.update(snapshot(activeShip));}
+}
+function finish(ok){
+ if(mode==='end'||mode==='done')return;
+ if(mode==='service')window.portService?.dismiss?.();activeShip=null;holdId=null;beginCheckout=0;buyItem=null;
+ if(drag)endDrag({pointerId:drag.id},false);
+ let bonus=ok?state.served*35+(5-state.missed)*45:0, total=state.score+bonus,rank=total>=2100?'S':total>=1400?'A':total>=800?'B':'C';
+ runs.unshift({score:total,served:state.served,missed:state.missed,sec:state.elapsed,clear:ok,frames:state.frames.slice(),events:state.events.slice()});if(runs.length>8)runs.pop();
+ mode='end';settle=0;settleDetails={total,bonus,rank};$ui.console.inert=true;$ui.console.classList.add('paused');$ui.overlay.hidden=false;$ui.title.hidden=$ui.buy.hidden=$ui.deal.hidden=true;$ui.finish.hidden=false;
+ Q('#port-final-title').textContent=ok?'本日の管制終了':'交代要請';Q('#port-final-score').textContent=0;Q('#port-rank').textContent='';Q('#port-rank').classList.remove('stamp');Q('#port-final-detail').innerHTML='<span></span><span></span>';Q('#port-retry').hidden=true;tone(ok?440:140,ok?660:82,.26);
+}
+function settleEnd(dt){
+ const {bonus,total,rank}=settleDetails;settle+=dt;const d=reduce.matches?.46:.95,q=clamp(settle/d,0,1),a=clamp(q/.5,0,1),b=clamp((q-.5)/.36,0,1);
+ Q('#port-final-score').textContent=fmt(state.score*a+bonus*b);
+ const finalDetail=Q('#port-final-detail');
+ if(!finalDetail.children[0].textContent){finalDetail.children[0].textContent='出港 '+state.served+' / +'+fmt(state.score);finalDetail.children[0].dataset.enter='1'}
+ if(q>=.5&&bonus&&!finalDetail.children[1].textContent){finalDetail.children[1].textContent='終業 +'+fmt(bonus);finalDetail.children[1].dataset.enter='1';}
+ if(q===1&&!Q('#port-rank').textContent){Q('#port-rank').textContent='ランク '+rank;Q('#port-rank').classList.add('stamp');Q('#port-retry').hidden=!solo;}
+ if(q===1&&settle>=d+.23&&!sent){
+  sent=true;mode='done';Q('#port-fx').querySelectorAll('.port-fly').forEach(e=>e.remove());$ui.float.hidden=$ui.wire.hidden=$ui.edge.hidden=true;
+  $ui.console.classList.add('terminal');parent.postMessage({type:'gameOver',score:total},'*');
+ }
+}
+function tick(now){
+ raf=0;const dt=clamp((now-stamp)/1000,0,.10);stamp=now;
+ if(!['reports','end','done'].includes(mode)){scene+=dt;backdrop()}
+ if(mode==='buy'){
+  if(holdId!==null){holdProgress=clamp((scene-holdBegan)/.5,0,1);hold.style.setProperty('--hold',holdProgress);if(holdProgress>=1)buy()}
+  if(beginCheckout&&scene>=beginCheckout)buyDone()
+ }
+ if(solidWire&&scene>=solidWire){solidWire=0;$ui.wire.hidden=true}
+ if(mode==='end')settleEnd(dt);else advance(dt);
+ if(renderDirty&&mode!=='done'&&(scene-lastPaint>.073||mode==='end')){lastPaint=scene;renderDirty=false;render();}
+ if(mode!=='done')raf=requestAnimationFrame(tick)
+}
+window.addEventListener('resize',size);
+document.addEventListener('visibilitychange',()=>{stamp=performance.now();});
+size();stamp=performance.now();raf=requestAnimationFrame(tick);
+</script>
+<style>
+#ps-service[hidden],#ps-service [hidden]{display:none!important}
+#ps-service{position:fixed;inset:0;z-index:8;display:grid;align-items:center;justify-items:center;padding:8px;background:#060916c7;color:#e7f2ff;font:500 13px/1.35 ui-monospace,monospace}
+#ps-card{width:min(390px,100%);max-height:calc(100dvh - 16px);overflow:auto;overscroll-behavior:contain;touch-action:pan-y;background:#10233b;border:1px solid #628bb3;box-shadow:0 10px 26px #090e1d;padding:12px}
+#ps-service button{font:inherit;border:1px solid #4c759e;background:#1a3656;color:inherit;border-radius:4px;min-height:43px;padding:5px 10px;margin:0;cursor:pointer;box-shadow:none;touch-action:manipulation}
+#ps-service button:focus-visible,#ps-service input:focus-visible{outline:2px solid #f5ce77;outline-offset:1px}
+#ps-service button:disabled{opacity:.45;cursor:default}
+#ps-service h2,#ps-service p,#ps-service dl{margin:0}
+#ps-title{font-size:17px;color:#e7f2ff}
+#ps-top,#ps-actions{display:flex;align-items:center;justify-content:space-between;gap:8px}
+#ps-kicker{display:block;color:#8eafcd;font-size:10px;letter-spacing:.06em}
+#ps-service .ps-subtle{font-size:11px;color:#a6bfd8}
+#ps-service .ps-tabs{position:relative;display:grid;grid-template-columns:1fr 1fr;margin:7px 0}
+#ps-service .ps-tabs button{border-radius:0;border-width:0 0 1px;background:transparent;color:#bbd4eb}
+#ps-service .ps-tabs [aria-selected=true]{color:#8df5d7}
+#ps-service .ps-tabs i{position:absolute;pointer-events:none;bottom:0;left:0;width:50%;height:3px;background:#8df5d7;transition:transform .19s ease}
+#ps-service[data-tab=stores] .ps-tabs i{transform:translateX(100%)}
+#ps-gear{display:grid;grid-template-columns:minmax(120px,1fr) minmax(110px,1fr);gap:8px}
+#ps-service .ps-list{position:relative;height:84px;overflow:auto;overscroll-behavior:contain;touch-action:pan-y;padding:2px 4px;border:1px solid #53789c;scrollbar-width:thin}
+#ps-service .ps-list button{position:relative;text-align:left;width:100%;padding:5px 4px 5px 23px}
+#ps-service .ps-list button+button{margin-top:4px}
+#ps-service .ps-list button[aria-current=true]{border-color:#f5ce77}
+#ps-service .ps-tip{display:grid;grid-template-rows:0fr;transition:grid-template-rows .18s ease;color:#bcd6e9;font-size:11px}
+#ps-service .ps-tip span{overflow:hidden}
+#ps-service [aria-current=true] .ps-tip{grid-template-rows:1fr}
+#ps-marker{position:absolute;top:0;left:10px;z-index:1;pointer-events:none;color:#f5ce77;transition:transform .18s cubic-bezier(.2,1.5,.35,1)}
+#ps-marker svg{display:block;width:10px;height:11px;shape-rendering:crispEdges;color:#f5ce77}
+#ps-marker.loop{animation:ps-marker .19s ease both}
+@keyframes ps-marker{0%,100%{opacity:1}20%,60%{opacity:0}}
+#ps-shipview{border:1px solid #53789c;background:#0a192a;text-align:center;margin:0;min-width:0;color:#a6bfd8;font-size:11px}
+#ps-shipview svg{display:block;width:100%;height:63px}
+#ps-shipview .ps-jack{transition:transform .2s ease,opacity .18s ease;transform-origin:74px 31px;opacity:0;transform:translateX(-12px)}
+#ps-service[data-tier="1"] .ps-jack.one,#ps-service[data-tier="2"] .ps-jack{opacity:1;transform:none}
+#ps-allocation{margin:7px 0;display:grid;align-items:center;grid-template-columns:auto 1fr auto;gap:8px;color:#bdd2e4}
+#ps-allocation input{width:100%;margin:0;accent-color:#8df5d7;touch-action:none}
+#ps-allocation output{color:#f5ce77}
+#ps-compare{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+#ps-compare>[data-choice]{border:1px solid #496f92;background:#152b45;padding:4px 6px;transition:transform .18s,opacity .18s}
+#ps-compare>[aria-current=true]{border-color:#8df5d7}
+#ps-service[data-tier="2"] #ps-compare [data-choice=standard]{order:2}
+#ps-compare [data-choice=standard].enter{animation:ps-compare .21s ease both}
+@keyframes ps-compare{from{transform:translateX(7px);opacity:.24}}
+#ps-compare dl{display:grid;grid-template-columns:1fr auto;gap:2px;color:#bdd2e4;font-size:11px}
+#ps-compare dt,#ps-compare dd{margin:0}
+#ps-delta{min-height:1lh;color:#8df5d7;font-size:11px;padding-top:5px}
+#ps-delta s{text-decoration:none;color:#a6bfd8}
+#ps-tray{min-height:31px;margin:4px 0;display:flex;justify-content:space-between;align-items:center;border:1px dashed #647f9e;padding:3px 6px}
+#ps-tray.confirmed{border-style:solid;border-color:#8df5d7}
+#ps-tray.confirmed #ps-check{display:inline-block;color:#8df5d7;animation:ps-check .22s steps(4,end) both}
+@keyframes ps-check{from{clip-path:inset(0 100% 0 0)}}
+#ps-slots{display:flex;gap:3px;justify-content:flex-end;flex-wrap:wrap}
+#ps-slots i{height:11px;width:11px;display:block;border:1px solid #5981a4;background:#8df5d7}
+#ps-slots i.spent{background:repeating-linear-gradient(135deg,transparent 0 3px,#5981a4 3px 4px)}
+#ps-slots i.empty{background:transparent}
+#ps-short{min-height:1lh;color:#ffc197;font-size:11px}
+#ps-short:not(:empty){padding-bottom:4px}
+#ps-route{display:flex;align-items:center;justify-content:space-between;gap:4px;margin:6px 0 9px}
+#ps-route span{border:1px solid #54779b;background:#142c49;padding:4px}
+#ps-route i{height:2px;flex:1;background:#75b5cb;position:relative}
+#ps-route.cut #ps-lacksource{outline:2px solid #ffc197;color:#ffc197;animation:ps-source .5s steps(1,end) both}
+@keyframes ps-source{from{outline-color:transparent;color:inherit}85%{outline-color:#ffc197;color:#ffc197}}
+#ps-route.cut i{background:repeating-linear-gradient(90deg,#ffc197 0 4px,transparent 4px 7px);animation:ps-route .33s ease both}
+#ps-route.cut i:nth-of-type(1){animation-delay:.14s}
+@keyframes ps-route{from{clip-path:inset(0 0 0 100%)}}
+#ps-actions button{flex:1}
+#ps-commit{background:#8df5d7!important;color:#12343b!important;font-weight:800!important}
+@media(prefers-reduced-motion:reduce){#ps-service *,#ps-service *::before,#ps-service *::after{animation:none!important;transition:none!important}}
+</style>
+<section id="ps-service" role="dialog" aria-modal="true" aria-labelledby="ps-title" data-tab="job" data-tier="1" hidden>
+<div id="ps-card">
+ <header id="ps-top"><div><span id="ps-kicker"></span><h2 id="ps-title"></h2></div><button id="ps-x" type="button" aria-label="閉じる">×</button></header>
+ <div class="ps-tabs" role="tablist" aria-label="作業と補給"><button type="button" role="tab" aria-controls="ps-work" aria-selected="true" id="ps-tab-job" data-tab="job">作業</button><button type="button" role="tab" aria-controls="ps-stock" aria-selected="false" id="ps-tab-stores" data-tab="stores" tabindex="-1">在庫</button><i aria-hidden="true"></i></div>
+ <div id="ps-work" role="tabpanel" aria-labelledby="ps-tab-job">
+  <div id="ps-gear">
+   <div class="ps-list" aria-label="作業プラン" role="group"><i id="ps-marker" aria-hidden="true"><svg viewBox="0 0 10 11"><path fill="currentColor" d="M4 0h2v2h3v2h1v5H0V4h1V2h3zm-2 5v2h2V5zm4 0v2h2V5z" fill-rule="evenodd"/></svg></i><button type="button" data-choice="standard">通常<span class="ps-tip"><span>1個で作業</span></span></button><button type="button" data-choice="priority">優先<span class="ps-tip"><span>2個で早く出港</span></span></button></div>
+   <figure id="ps-shipview"><svg viewBox="0 0 111 60" aria-hidden="true"><path d="M6 16h15v28H6z" fill="#709ace"/><path d="M74 19h20l10 10v5L94 44H74z" fill="#badfee"/><path d="M83 24h6l7 6-7 6h-6z" fill="#163a56"/><path class="ps-jack one" d="M20 27h54v6H20z" fill="#8df5d7"/><path class="ps-jack" d="M20 36h25l7-13h22v4H55l-7 13H20z" fill="#f5ce77"/></svg><figcaption>接続プレビュー</figcaption></figure>
+  </div>
+  <div id="ps-allocation"><label for="ps-range">割当数</label><input id="ps-range" type="range" min="1" max="2" value="1" step="1" list="ps-ticks"><output id="ps-units" for="ps-range">1</output><datalist id="ps-ticks"><option value="1"><option value="2"></datalist></div>
+  <div id="ps-compare"><div data-choice="standard"></div><div data-choice="priority"></div></div>
+  <div id="ps-delta" aria-live="polite"></div>
+ </div>
+ <div id="ps-stock" role="tabpanel" aria-labelledby="ps-tab-stores" hidden>
+  <p class="ps-subtle" id="ps-stock-summary"></p>
+  <div id="ps-route"><span id="ps-lacksource"></span><i aria-hidden="true"></i><span id="ps-dockpath"></span><i aria-hidden="true"></i><span>作業口</span></div>
+ </div>
+ <div id="ps-tray"><div><span id="ps-check" aria-hidden="true" hidden>✓</span> <span id="ps-pending">保留</span></div><span id="ps-slots" aria-hidden="true"></span></div>
+ <p id="ps-short" role="status"></p>
+ <div id="ps-actions"><button id="ps-cancel" type="button">戻る</button><button id="ps-commit" type="button">作業開始</button></div>
+</div>
+</section>
+<script>
+(() => {
+'use strict';
+const root=document.querySelector('#ps-service'), q=s=>root.querySelector(s), qa=s=>[...root.querySelectorAll(s)];
+const card=q('#ps-card'), list=q('.ps-list'), marker=q('#ps-marker');
+const buttons=qa('.ps-list button'), tabs=qa('.ps-tabs button'), reduced=matchMedia('(prefers-reduced-motion:reduce)');
+const info={fuel:['給油','燃料','fuel'],cargo:['荷役','荷枠','cargo'],repair:['修理','部品','parts']};
+let ship,state,commit,onClose,focusBack,choice=0,locked=false,afterTimer=0,token=0,lastErr='',shown=false;
+function berthText(){return 'D'+(1+Number(ship.berth||0))}
+function available(){return Math.max(0,Number(state[info[ship.request][2]])||0)}
+function resolveRates(){
+ const sec=ship.berth===1?4.2:6.1;
+ return state.rates||{standard:{score:100,seconds:sec,cost:1},priority:{score:150,seconds:sec*.55,cost:2}};
+}
+function plan(){return choice?'priority':'standard'}
+function amount(){return resolveRates()[plan()].cost}
+function sec(n){return Number(n).toFixed(1)+'秒'}
+function restart(el,cl){el.classList.remove(cl);void el.offsetWidth;el.classList.add(cl)}
+function keepVisible(wrap=false){
+ const b=buttons[choice];if(!b.offsetHeight)return;
+ const top=b.offsetTop,bottom=top+b.offsetHeight;
+ if(top<list.scrollTop+2||bottom>list.scrollTop+list.clientHeight-2)list.scrollTo({top:Math.max(0,top-2),behavior:reduced.matches?'auto':'smooth'});
+ if(wrap&&!reduced.matches){
+  const serial=++token;marker.classList.add('loop');
+  setTimeout(()=>{if(serial!==token)return;marker.style.transition='none';marker.style.transform='translateY('+(top+12)+'px)';void marker.offsetWidth;marker.style.transition=''},57);
+  setTimeout(()=>{if(serial===token)marker.classList.remove('loop')},195);return;
+ }
+ token++;marker.classList.remove('loop');marker.style.transform='translateY('+(top+12)+'px)';
+}
+function renderStock(n,need,isNew){
+ const shortage=Math.max(0,need-n),res=info[ship.request][1],slots=q('#ps-slots');
+ slots.replaceChildren();
+ const count=Math.min(8,Math.max(n,need));
+ for(let i=0;i<count;i++){
+  const dot=document.createElement('i');
+  if(i>=n)dot.className='empty';else if(isNew&&i<need)dot.className='spent';
+  slots.append(dot);
+ }
+ q('#ps-short').textContent=lastErr||(shortage&&!isNew?res+'があと'+shortage+'個必要':'');
+ q('#ps-route').classList.toggle('cut',!!shortage&&!isNew);
+ q('#ps-lacksource').textContent=res+'庫';q('#ps-dockpath').textContent=berthText();
+ q('#ps-stock-summary').textContent=res+'：'+n+'個　割当：'+need+'個';
+}
+function render(){
+ if(!ship||locked)return;
+ const [job,resource]=info[ship.request], rates=resolveRates(),need=amount(),n=available();
+ root.dataset.tier=String(need);
+ q('#ps-kicker').textContent=berthText()+' / '+job;q('#ps-title').textContent=ship.name;
+ q('#ps-range').value=String(need);q('#ps-units').value=String(need);
+ buttons.forEach((b,i)=>b.setAttribute('aria-current',String(i===choice)));
+ const stats=(k)=>{const x=rates[k];return '<b>'+(k==='priority'?'優先':'通常')+'</b><dl><dt>'+resource+'</dt><dd>'+x.cost+'個</dd><dt>作業時間</dt><dd>'+sec(x.seconds)+'</dd><dt>基本点</dt><dd>'+x.score+'</dd></dl>'};
+ qa('#ps-compare>[data-choice]').forEach(el=>{
+  const k=el.dataset.choice;
+  const html=stats(k);if(el.innerHTML!==html)el.innerHTML=html;
+  el.setAttribute('aria-current',String(plan()===k));
+  el.hidden=k==='priority'&&!choice;
+ });
+ const {standard:a,priority:b}=rates;
+ q('#ps-delta').innerHTML=choice?'基本点 <s>'+a.score+'</s> → '+b.score+'　|　空き時間 '+sec(Math.max(0,a.seconds-b.seconds))+'早い':'';
+ q('#ps-pending').textContent='保留：'+resource+' '+need+'個';
+ renderStock(n,need,false);
+ q('#ps-commit').disabled=n<need;
+}
+function select(i,wrap=false){
+ const prev=choice;choice=i;lastErr='';render();keepVisible(wrap);
+ if(prev!==i&&i===1)restart(q('#ps-compare [data-choice=standard]'),'enter');
+}
+buttons.forEach((b,i)=>{
+ b.onclick=()=>select(i);
+ b.onfocus=()=>{if(!locked&&i!==choice)select(i)};
+ b.onkeydown=e=>{
+  if(!['ArrowUp','ArrowDown','Home','End'].includes(e.key))return;
+  e.preventDefault();
+  const target=e.key==='Home'?0:e.key==='End'?1:1-choice;
+  const wrap=(e.key==='ArrowUp'&&choice===0)||(e.key==='ArrowDown'&&choice===1);
+  if(!locked){select(target,wrap);buttons[target].focus({preventScroll:true})}
+ };
+});
+q('#ps-range').oninput=e=>select(+e.target.value-1);
+function setTab(name,moveFocus=false){
+ root.dataset.tab=name;const isJob=name==='job';
+ q('#ps-work').hidden=!isJob;q('#ps-stock').hidden=isJob;
+ tabs.forEach(b=>{const current=b.dataset.tab===name;b.setAttribute('aria-selected',String(current));b.tabIndex=current?0:-1;if(current&&moveFocus)b.focus()});
+ if(isJob)keepVisible();
+ else if(q('#ps-route').classList.contains('cut')){q('#ps-route').classList.remove('cut');void q('#ps-route').offsetWidth;q('#ps-route').classList.add('cut')}
+}
+tabs.forEach(b=>{b.onclick=()=>setTab(b.dataset.tab);b.onkeydown=e=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;e.preventDefault();setTab(e.key==='Home'?'job':e.key==='End'?'stores':b.dataset.tab==='job'?'stores':'job',true)}});
+function dismiss(){
+ clearTimeout(afterTimer);afterTimer=0;token++;root.hidden=true;shown=false;
+}
+function close(){if(!shown)return;const done=onClose;dismiss();if(done)done();if(focusBack?.isConnected&&!focusBack.disabled)focusBack.focus({preventScroll:true})}
+q('#ps-x').onclick=q('#ps-cancel').onclick=close;
+q('#ps-commit').onclick=()=>{
+ if(locked||!ship||q('#ps-commit').disabled)return;
+ const before=available(),need=amount();
+ const result=commit({kind:plan()});
+ if(!result?.ok){lastErr=result?.reason||'作業を開始できませんでした';render();return}
+ if(!shown)return;
+ locked=true;
+ q('#ps-tray').classList.add('confirmed');q('#ps-check').hidden=false;
+ q('#ps-pending').textContent='割当確定：'+info[ship.request][1]+' '+need+'個';renderStock(before,need,true);
+ q('#ps-commit').textContent='作業開始 ✓';q('#ps-commit').disabled=true;
+ q('#ps-range').disabled=true;buttons.forEach(b=>b.disabled=true);
+ afterTimer=setTimeout(close,reduced.matches?280:420);
+};
+root.addEventListener('keydown',e=>{
+ e.stopPropagation();
+ if(e.key==='Escape'){e.preventDefault();close();return}
+ if(e.key!=='Tab')return;
+ const nav=qa('button,input').filter(el=>!el.disabled&&el.tabIndex>=0&&el.getClientRects().length);
+ if(e.shiftKey&&document.activeElement===nav[0]){e.preventDefault();nav.at(-1).focus()}
+ if(!e.shiftKey&&document.activeElement===nav.at(-1)){e.preventDefault();nav[0].focus()}
+});
+function open(nextShip,nextState,action,closed){
+ if(!nextShip||!info[nextShip.request]||!nextState||typeof action!=='function')return;
+ dismiss();focusBack=document.activeElement;ship=nextShip;state=nextState;commit=action;onClose=closed;
+ choice=0;locked=false;lastErr='';shown=true;root.hidden=false;
+ q('#ps-range').disabled=false;buttons.forEach(b=>b.disabled=false);
+ q('#ps-tray').classList.remove('confirmed');q('#ps-check').hidden=true;q('#ps-commit').textContent='作業開始';list.scrollTop=0;card.scrollTop=0;
+ setTab('job');render();keepVisible();tabs[0].focus({preventScroll:true});
+}
+function update(nextState){if(!shown||!nextState)return;state=nextState;render()}
+window.portService={open,update,dismiss};
+})();
+</script>
+
+<style>
+#srView{position:fixed;z-index:8;inset:0;display:grid;place-items:center;padding:10px;background:#080d22b8}
+#srView .sr-shell{--sr-line:#38587e;--sr-dim:#a5bbd7;position:relative;width:min(100%,422px);max-height:100%;overflow:auto;overscroll-behavior:contain;touch-action:pan-y;background:#101a33;color:#eaf5ff;border:2px solid #7099c7;box-shadow:0 7px #050a18;padding:13px;text-align:left}
+#srView *{touch-action:pan-y}
+#srView button{min-height:42px;box-shadow:none;padding:6px 9px;font-size:13px}
+#srView button:not(:disabled):active{transform:translateY(2px);box-shadow:none}
+#srView button:focus-visible{outline-offset:1px}
+#srView .sr-head,#srView .sr-tabs,#srView .sr-flex{display:flex;align-items:center;justify-content:space-between;gap:7px}
+#srView .sr-head h2{font-size:20px;margin:0}
+#srView .sr-head button{width:44px;font-size:18px}
+#srView .sr-tabs{margin:8px 0 10px}
+#srView .sr-tabs button{flex:1;background:#162744}
+#srView .sr-tabs button[aria-pressed=true]{color:#101d2c;background:#78eccf;border-color:#a4ffe5}
+#srView .sr-content{position:relative;min-height:240px}
+#srView .sr-sub{color:var(--sr-dim);font-size:11px;letter-spacing:.08em;margin:8px 0 4px}
+#srView .sr-row{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;text-align:left;margin:3px 0;background:#182847;border:1px solid #4d6b96}
+#srView .sr-row span{min-width:0;overflow-wrap:anywhere}
+#srView .sr-row strong,#srView .sr-success{color:#82f3d0}
+#srView .sr-empty{font-size:12px;color:var(--sr-dim);margin:12px 0}
+#srView .sr-map{position:relative;height:42px;margin-bottom:6px}
+#srView .sr-mapline{position:absolute;top:21px;height:2px;background:#48638c;left:9%;right:9%}
+#srView .sr-mapfill{height:100%;background:#80f8cf;transition:width 460ms ease-out}
+#srView .sr-dot{position:absolute;top:14px;width:16px;height:16px;border:2px solid #7d98bf;background:#10203b;transform:translateX(-50%) rotate(45deg)}
+#srView .sr-dot[data-on="1"]{border-color:#a0ffe0;background:#5edaaf}
+#srView .sr-stars{color:#ffe299;font-size:19px;white-space:nowrap}
+#srView .sr-stars i{font-style:normal;display:inline-block}
+#srView .sr-stars i.sr-slot{color:#9daec7}
+#srView .sr-stars i.sr-slot::before{content:"☆"}
+#srView .sr-stars i.sr-fresh::after{content:"★";position:absolute;inset:0;color:#ffde83;animation:sr-star 480ms both;animation-delay:calc(var(--slot)*75ms)}
+#srView .sr-stars i.sr-fresh::before{animation:sr-staroff 480ms step-end both;animation-delay:calc(var(--slot)*75ms)}
+#srView .sr-stars i.sr-fresh{position:relative}
+#srView .sr-stars i.sr-earned{color:#ffe299}
+#srView .sr-stars i.sr-earned::before{content:"★"}
+#srView .sr-in{animation:sr-in 165ms both}
+#srView .sr-out{animation:sr-out 120ms both;pointer-events:none}
+#srView .sr-card{overflow:hidden;position:relative;border:1px solid #567ca8;background:#182847;padding:10px 12px;min-height:126px}
+#srView .sr-cardhead{display:flex;align-items:center;justify-content:space-between;gap:5px;font-weight:bold;font-size:14px;color:#fff0bf}
+#srView .sr-display{font-size:12px;color:#d6e3fa;line-height:1.6;margin:9px 0 0}
+#srView .sr-card p.sr-display{margin:8px 0;color:#a8bedb}
+#srView .sr-card .sr-rule{display:block;font-size:13px;color:#d6e3fa;border-bottom:1px solid #48638c;padding:5px 1px}
+#srView .sr-rule.sr-met{color:#81e5c7}
+#srView .sr-lock{position:relative;display:inline-block;white-space:nowrap;color:#f3cf8c;font-size:12px}
+#srView .sr-lock.sr-beam::after{content:"";position:absolute;inset:-3px 0;background:linear-gradient(90deg,transparent,#c5ffee,transparent);opacity:0;pointer-events:none;animation:sr-beam 570ms both}
+#srView .sr-lock.sr-unlocked{color:#8ef7d3}
+#srView .sr-rule.sr-tick{animation:sr-tick 320ms both}
+#srView .sr-fog{overflow:hidden;display:grid;place-items:center;position:relative;margin:8px 0;border:1px solid #395271;background:#122038;color:#acc3df;font-size:31px;min-height:54px}
+#srView .sr-fog::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(165deg,#13223b 0 5px,#233652 5px 11px);opacity:.92;transform-origin:right}
+#srView .sr-fog.sr-clear::before{animation:sr-clear 440ms ease-out both}
+#srView .sr-fog.sr-seen::before{display:none}
+#srView .sr-fog.sr-clear,#srView .sr-fog.sr-seen{color:#ffdd85}
+#srView .sr-noteBox{height:43px;margin-top:6px}#srView .sr-note{display:block;overflow:hidden;margin-top:0;max-height:43px;clip-path:inset(0 0 0 0);animation:sr-note 280ms ease-out both}
+#srView .sr-back{width:100%;margin-top:9px}
+#srView .sr-ledger{perspective:500px;position:relative}
+#srView .sr-pagebuttons{display:grid;grid-template-columns:46px 1fr 46px;align-items:center;text-align:center;gap:8px;margin-top:8px;color:#a5bbd7;font-size:12px}
+#srView .sr-leaf{position:absolute;inset:0;z-index:2;transform-style:preserve-3d;transform-origin:left;animation:sr-flip 440ms ease-in-out both;pointer-events:none}
+#srView .sr-leaf>div{display:grid;place-items:center;position:absolute;inset:0;backface-visibility:hidden;border:1px solid #7a97c3;background:repeating-linear-gradient(#182847 0 22px,#294064 23px,#182847 24px);color:#e4edff}
+#srView .sr-leaf>div+div{transform:rotateY(180deg);background:repeating-linear-gradient(90deg,#31486a 0 3px,#253b5b 3px 9px);color:#abcdde}
+#srView .sr-new{border:1px solid #f4d18b;padding:2px 4px;color:#ffe09c;font-size:9px;flex-shrink:0}
+#srView .sr-new.sr-read{animation:sr-read 270ms both}
+#srView .sr-replay{position:relative;margin-top:9px}
+#srView .sr-replay input{width:100%;height:32px;accent-color:#7aefd1;touch-action:none;margin-top:45px}
+#srView .sr-tip{pointer-events:none;position:absolute;top:0;width:108px;height:44px;transform:translateX(-50%);border:1px solid #6e99c0;background:#122440;text-align:center;color:#c5dded;font-size:10px;padding:3px}
+#srView .sr-tip svg{display:block;width:100%;height:21px}
+@keyframes sr-in{from{opacity:0}to{opacity:1}}
+@keyframes sr-out{to{opacity:0}}
+@keyframes sr-star{from{transform:translateY(-17px) scale(1.28);opacity:0}to{transform:none;opacity:1}}
+@keyframes sr-staroff{to{visibility:hidden}}
+@keyframes sr-beam{0%{transform:translateX(-70%);opacity:0}55%{opacity:.9}100%{transform:translateX(65%);opacity:0}}
+@keyframes sr-tick{from{opacity:.45;background:#255776}to{opacity:1;background:transparent}}
+@keyframes sr-clear{to{opacity:0;transform:scaleX(.1)}}
+@keyframes sr-note{from{max-height:0;clip-path:inset(0 0 100% 0)}}
+@keyframes sr-read{to{opacity:0;transform:scale(.25)}}
+@keyframes sr-flip{0%{transform:rotateY(0);opacity:1}86%{opacity:1}100%{transform:rotateY(-179deg);opacity:0}}
+@media(prefers-reduced-motion:reduce){#srView *,#srView *::after,#srView *::before{animation-duration:.001ms!important;animation-delay:0ms!important;transition:none!important}}
+</style>
+<section id="srView" hidden aria-label="管制ログ" role="dialog" aria-modal="true">
+<div class="sr-shell"><header class="sr-head"><h2>管制ログ</h2><button type="button" data-sr="exit" aria-label="閉じる">×</button></header>
+<div class="sr-tabs"><button type="button" data-sr="route" aria-pressed="true">進捗</button><button type="button" data-sr="record" aria-pressed="false">シフト記録</button></div>
+<div class="sr-content"></div></div>
+</section>
+<script>
+(()=>{
+ 'use strict';
+ const view=document.getElementById('srView'), content=view.querySelector('.sr-content');
+ const buttons=[...view.querySelectorAll('.sr-tabs button')], reduced=matchMedia('(prefers-reduced-motion: reduce)');
+ const n=v=>Number.isFinite(Number(v))?Math.max(0,Number(v)):0;
+ const num=v=>Math.floor(n(v)).toLocaleString('ja-JP');
+ const hasNow=d=>n(d.sec)>0||n(d.served)>0||((d.frames||[]).length>1);
+ const starCount=score=>[100,250,500].filter(t=>n(score)>=t).length;
+ const route=[
+  {name:'管制はじめ',art:'✦',rule:'出港を1隻見送る',yes:r=>n(r.served)>=1,value:r=>num(r.served)+' / 1',note:'Aバースは給油、Bは荷役、Cは修理が速い。'},
+  {name:'港はにぎやか',art:'✧',rule:'1シフトで3隻出港',yes:r=>n(r.served)>=3,value:r=>num(r.served)+' / 3',note:'見送りが済むとバースが空く。待ち時間が短い船から確認。'},
+  {name:'今日も定時',art:'⬡',rule:'シフトを完了する',yes:r=>!!r.clear,value:r=>r.clear?'済':'未',note:'燃料や部品は補充できる。空き時間に在庫を確認。'}
+ ];
+ let state={}, tab='route', page=0, currentRoute=-1, closeFn, handle=0, origin=null;
+ let starSeen=0, routeReached=1;
+ const opened=new Set(), ledgerSeen=new Set(), ruleSeen=new Set();
+ let runIds=new WeakMap(), nextId=0;
+ const recordId=r=>{if(r===state)return 'current'; if(!runIds.has(r))runIds.set(r,++nextId);return 'r'+runIds.get(r);};
+ const runList=()=>[...(hasNow(state)?[state]:[]),...(state.runs||[]).filter(r=>r&&typeof r==='object')];
+ const allScores=()=>Math.max(n(state.best),n(state.score),...runList().map(r=>n(r.score)));
+ function stats(){const out={served:n(state.served),clear:!!state.clear}; for(const r of runList()){out.served=Math.max(out.served,n(r.served));out.clear||=!!r.clear;}return out;}
+ function tabStyle(){for(const b of buttons)b.setAttribute('aria-pressed',String(b.dataset.sr===tab));}
+ function row(i,done){const item=route[i];return '<button class="sr-row" type="button" data-sr="detail" data-i="'+i+'"><span>'+item.name+'</span><strong>'+(done?'✓':'›')+'</strong></button>';}
+ function renderRoute(){
+  const progress=stats(), next=route.map(r=>r.yes(progress));
+  let first=next.findIndex(x=>!x);first=first<0?3:first;const endpoint=Math.min(3,first+1);
+  const stars=starCount(allScores());
+  content.innerHTML='<div class="sr-flex"><div class="sr-sub">最高 '+num(allScores())+'</div><div class="sr-stars" aria-label="星 '+stars+' / 3">'+Array.from({length:3},(_,i)=>'<i aria-hidden="true" style="--slot:'+i+'" class="'+(i<starSeen?'sr-earned':i<stars?'sr-slot sr-fresh':'sr-slot')+'"></i>').join('')+'</div></div>'+
+  '<div class="sr-map" aria-label="進捗 '+next.filter(Boolean).length+' / 3"><div class="sr-mapline"><div class="sr-mapfill" style="width:'+(routeReached*100/3)+'%"></div></div>'+Array.from({length:4},(_,i)=>'<span aria-hidden="true" class="sr-dot" data-on="'+Number(i<=first)+'" style="left:'+(9+i*82/3)+'%"></span>').join('')+'</div>'+
+  '<div class="sr-sub">目標</div><div data-zone="todo">'+route.map((r,i)=>row(i,next[i]&&opened.has('m'+i))).filter((_,i)=>!next[i]||!opened.has('m'+i)).join('')+'</div><div class="sr-sub">達成</div><div data-zone="done">'+route.map((r,i)=>row(i,true)).filter((_,i)=>next[i]&&opened.has('m'+i)).join('')+'</div>';
+  const fill=content.querySelector('.sr-mapfill'); fill.getBoundingClientRect(); fill.style.width=(endpoint*100/3)+'%';
+  routeReached=endpoint; starSeen=Math.max(starSeen,stars);
+  const target=content.querySelector('[data-zone=done]');
+  const moved=[];
+  for(let i=0;i<route.length;i++){
+   const el=content.querySelector('[data-zone=todo] [data-i="'+i+'"]');
+   if(el&&next[i])moved.push({el,i,rect:el.getBoundingClientRect()});
+  }
+  for(const {el,i} of moved){opened.add('m'+i);el.querySelector('strong').textContent='✓';target.appendChild(el);}
+  if(!reduced.matches) for(const {el,rect} of moved){
+   const y=rect.top-el.getBoundingClientRect().top;
+   if(y)el.animate([{transform:'translateY('+y+'px)',zIndex:1,position:'relative'},{transform:'none'}],{delay:100,fill:'both',duration:420,easing:'cubic-bezier(.19,.8,.28,1)'});
+  }
+  if(!target.children.length)target.innerHTML='<p class="sr-empty">まだありません</p>';
+  const todo=content.querySelector('[data-zone=todo]');
+  if(!todo.children.length)todo.innerHTML='<p class="sr-empty">すべて達成</p>';
+ }
+ function renderDetail(i,rect){
+  const r=route[i], p=stats(), done=r.yes(p), fresh=done&&!ruleSeen.has(i);
+  currentRoute=i;
+  content.innerHTML='<article class="sr-card"><div class="sr-cardhead"><span>'+r.name+'</span><span class="sr-lock '+(done&&!fresh?'sr-unlocked':'')+'">'+(done&&!fresh?'✓ 登録済':'◇ 未登録')+'</span></div><span class="sr-rule '+(done?'sr-met':'')+'"><span>'+r.rule+'</span> <b>'+r.value(p)+'</b></span><div class="sr-fog '+(done&&!fresh?'sr-seen':'')+'" aria-label="'+(done?'認定印':'未発見の認定印')+'"><span aria-hidden="true">'+r.art+'</span></div><button type="button" data-sr="note" aria-expanded="false">管制メモ ＋</button><div class="sr-noteBox"><p class="sr-display sr-note" hidden>'+r.note+'</p></div></article><button type="button" class="sr-back" data-sr="back">‹ 進捗へ</button>';
+  const card=content.querySelector('.sr-card');
+  if(rect&&!reduced.matches){
+   const box=card.getBoundingClientRect();
+   const ghost=document.createElement('div');
+   ghost.textContent=r.name;ghost.setAttribute('aria-hidden','true');
+   Object.assign(ghost.style,{position:'fixed',pointerEvents:'none',zIndex:'12',background:'#182847',border:'1px solid #567ca8',padding:'10px',fontSize:'14px',fontWeight:'bold',color:'#fff0bf',overflow:'hidden',whiteSpace:'nowrap'});
+   view.appendChild(ghost);
+   const geometry=el=>({left:el.left+'px',top:el.top+'px',width:el.width+'px',height:el.height+'px'});
+   ghost.animate([geometry(rect),{...geometry(box),opacity:1,offset:.78},{...geometry(box),opacity:0}],{duration:300,easing:'cubic-bezier(.2,.8,.25,1)',fill:'both'}).finished.then(()=>ghost.remove(),()=>ghost.remove());
+   card.animate([{opacity:0},{opacity:0,offset:.74},{opacity:1}],{duration:300,fill:'both'});
+  }
+  if(fresh){
+   const apply=()=>{
+    if(!view.hidden&&currentRoute===i&&content.contains(card)){
+     const rule=card.querySelector('.sr-rule');rule.classList.add('sr-tick');rule.insertAdjacentHTML('afterbegin','✓ ');card.querySelector('.sr-lock').classList.add('sr-beam');
+    }
+   };
+   const unlock=()=>{
+    if(!view.hidden&&currentRoute===i&&content.contains(card)){
+     ruleSeen.add(i);
+     const lock=card.querySelector('.sr-lock');lock.textContent='✓ 登録済';lock.classList.add('sr-unlocked');
+     card.querySelector('.sr-fog').classList.add('sr-clear');
+    }
+   };
+   if(reduced.matches){apply();unlock();}else{setTimeout(apply,170);setTimeout(unlock,600);}
+  }
+  content.querySelector('[data-sr=back]').focus({preventScroll:true});
+ }
+ function frameTip(input,frames,events,tip){
+  const idx=Number(input.value), f=frames[idx];
+  if(!f)return;
+  const max=Math.max(1,n(frames.at(-1)?.score),...frames.map(x=>n(x.score)));
+  const w=input.clientWidth||255;tip.style.left=Math.max(54,Math.min(w-54,w*(idx/Math.max(1,frames.length-1))))+'px';
+  const point=(v,i)=>[3+i*74/Math.max(1,frames.length-1),20-n(v.score)*16/max];
+  tip.querySelector('polyline').setAttribute('points',frames.slice(0,idx+1).map((v,i)=>point(v,i).join(',')).join(' '));
+  const [x,y]=point(f,idx);const dot=tip.querySelector('circle');dot.setAttribute('cx',x);dot.setAttribute('cy',y);
+  const event=events.reduce((last,ev)=>n(ev.elapsed)<=n(f.elapsed)&&(!last||n(ev.elapsed)>=n(last.elapsed))?ev:last,null);
+  const kind={dock:'入港',depart:'出港',miss:'失注',supply:'補給'};
+  tip.querySelector('span').textContent=n(f.elapsed).toFixed(0)+'秒 '+(event?kind[event.kind]||'':'待機')+' '+num(f.served)+'隻';
+  input.setAttribute('aria-valuetext',n(f.elapsed).toFixed(0)+'秒、出港'+num(f.served)+'隻、得点'+num(f.score)+(event?.name?'、直前: '+event.name:''));
+ }
+ function renderRecord(){
+  const list=runList();
+  page=Math.min(page,Math.max(0,list.length-1));
+  const r=list[page];
+  if(!r){content.innerHTML='<div class="sr-card"><div class="sr-cardhead">まだ記録はありません</div><p class="sr-display">管制を始めると、ここにシフトの記録が残ります。</p></div>';return;}
+  const current=r===state, key=recordId(r), isNew=!current&&!ledgerSeen.has(key);
+  const old=content.querySelector('.sr-leaf');if(old)old.remove();
+  content.innerHTML='<div class="sr-ledger"><article class="sr-card"><div class="sr-cardhead"><span>'+(current?'今のシフト':r.clear?'完了':'途中終了')+'</span>'+(isNew?'<span class="sr-new">NEW</span>':'')+'</div><div class="sr-display sr-flex"><strong>'+num(r.score)+' 点</strong><span>出港 '+num(r.served)+'</span><span>失注 '+num(r.missed)+'</span></div>'+
+   (r.frames&&r.frames.length>1?'<div class="sr-replay"><div class="sr-tip" aria-hidden="true"><svg viewBox="0 0 80 23"><path d="M3 20H77M3 3V20" stroke="#48658f" stroke-width="1"/><polyline fill="none" stroke="#85f7d1" stroke-width="2"/><circle r="2.4" fill="#ffdb8a"/></svg><span></span></div><input type="range" min="0" max="'+(r.frames.length-1)+'" value="'+(r.frames.length-1)+'" aria-label="シフト記録の時間軸"></div>':'<p class="sr-display">'+num(r.sec)+'秒 ・ 出港 '+num(r.served)+'隻'+'</p>')+
+   '</article></div><div class="sr-pagebuttons"><button type="button" data-sr="prev" aria-label="前のシフト" '+(page<=0?'disabled':'')+'>‹</button><span>'+(page+1)+' / '+list.length+'</span><button type="button" data-sr="next" aria-label="次のシフト" '+(page+1>=list.length?'disabled':'')+'>›</button></div>';
+  if(isNew){
+   const badge=content.querySelector('.sr-new');
+   setTimeout(()=>{
+    if(view.hidden||tab!=='record'||!content.contains(badge))return;
+    ledgerSeen.add(key);badge.classList.add('sr-read');
+    if(reduced.matches)badge.remove();else badge.addEventListener('animationend',()=>badge.remove(),{once:true});
+   },480);
+  }
+  const range=content.querySelector('input');
+  if(range){const tip=content.querySelector('.sr-tip');const move=()=>frameTip(range,r.frames,r.events||[],tip);range.addEventListener('input',move);move();}
+ }
+ function change(to){
+  if(tab===to&&currentRoute<0)return;
+  if(handle)clearTimeout(handle);
+  const render=()=>{handle=0;tab=to;currentRoute=-1;tabStyle();content.className='sr-content sr-in';to==='route'?renderRoute():renderRecord();};
+  if(reduced.matches){render();return;}
+  content.className='sr-content sr-out';handle=setTimeout(render,120);
+ }
+ function pageTurn(inc){
+  const list=runList(), target=page+inc;
+  if(!list[target])return;
+  const old=content.querySelector('.sr-cardhead span')?.textContent||'';
+  page=target;renderRecord();
+  if(!reduced.matches){
+   const leaf=document.createElement('div');leaf.className='sr-leaf';leaf.setAttribute('aria-hidden','true');
+   leaf.innerHTML='<div></div><div>✦</div>';leaf.firstElementChild.textContent=old;
+   if(inc<0){leaf.style.animationName='none';leaf.animate([{transform:'rotateY(0)'},{transform:'rotateY(175deg)',opacity:0}],{duration:440,easing:'ease-in-out'}).finished.then(()=>leaf.remove(),()=>{});}
+   else leaf.addEventListener('animationend',()=>leaf.remove(),{once:true});
+   content.querySelector('.sr-ledger').appendChild(leaf);
+  }
+  const currentButton=content.querySelector('[data-sr="'+(inc<0?'prev':'next')+'"]:not(:disabled)')||content.querySelector('.sr-pagebuttons button:not(:disabled)');
+  currentButton?.focus({preventScroll:true});
+ }
+ function close(){
+  if(view.hidden)return;
+  if(handle)clearTimeout(handle);handle=0;view.hidden=true;content.replaceChildren();
+  const cb=closeFn;closeFn=null;if(cb)cb();
+  if(origin&&origin.isConnected&&origin.getClientRects().length)origin.focus({preventScroll:true});
+ }
+ view.addEventListener('click',e=>{
+  const b=e.target.closest('[data-sr]');if(!b||b.disabled)return;
+  const action=b.dataset.sr;
+  if(action==='exit')close();
+  else if(action==='route'||action==='record')change(action);
+  else if(action==='detail')renderDetail(Number(b.dataset.i),b.getBoundingClientRect());
+  else if(action==='back'){const i=currentRoute;currentRoute=-1;renderRoute();content.querySelector('[data-i="'+i+'"]')?.focus({preventScroll:true});}
+  else if(action==='note'){
+    const note=content.querySelector('.sr-note');note.hidden=!note.hidden;b.setAttribute('aria-expanded',String(!note.hidden));b.textContent='管制メモ '+(note.hidden?'＋':'−');
+  }
+  else if(action==='prev'||action==='next')pageTurn(action==='prev'?-1:1);
+ });
+ view.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){e.preventDefault();e.stopImmediatePropagation();close();return;}
+  if(e.key!=='Tab')return;
+  const items=[...view.querySelectorAll('button:not(:disabled),input')].filter(el=>el.getClientRects().length);
+  const first=items[0],last=items[items.length-1];
+  if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
+  if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
+ });
+ window.portReports={open(data,callback){
+  state=data||{};closeFn=callback;origin=document.activeElement;tab='route';page=0;currentRoute=-1;
+  view.hidden=false;tabStyle();content.className='sr-content';renderRoute();
+  view.querySelector('[data-sr=exit]').focus({preventScroll:true});
+ },close,closed:()=>view.hidden};
+})();
+</script>
+
+</body></html>
