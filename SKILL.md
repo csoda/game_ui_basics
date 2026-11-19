@@ -1,6 +1,6 @@
 ---
 name: game-ui-basics
-description: Design, implement, or review in-game HUDs, menus, inventory, controls, and feedback. Use for game UI layout, information hierarchy, visual vocabulary, responsive and gamepad or touch navigation, or choosing a UI motion pattern from the reference catalog. Not for marketing pages or generic dashboards.
+description: Design, implement, or review in-game HUDs, menus, inventory, controls, and feedback. Use for game UI layout, information hierarchy, visual vocabulary, interaction flow and game UX, responsive and gamepad or touch navigation, or choosing a UI motion pattern from the reference catalog. Not for marketing pages or generic dashboards.
 ---
 
 # ゲームUIの設計・実装・レビュー
@@ -9,6 +9,7 @@ description: Design, implement, or review in-game HUDs, menus, inventory, contro
 
 ## 必要な資料だけ開く
 
+- 初見の迷い、操作の手間、待ち、不足からの復帰：[ゲームUXガイド](references/game-ux.md)を先に読む。初回と反復、失敗後の流れを通し、攻略の判断とUIの手間を分ける。
 - UIを新しく作る・直す：まず[視覚語彙ガイド](references/visual-vocabulary.md)で、次の判断に使う意味・形・位置・変化を決める。同じ意味は別画面でも同じ手がかりを使い、教えた後に別の場面でも読めるかを見る。
 - UIの文言と見た目の整理：[AIがゲームUIを作るときの注意点](references/ai-ui.md)を先に読む。頼まれていないキャッチコピーや「〇〇、〇〇。」調の文は足さない。説明は配置・形・動きで伝え、操作名や判断に必要な数字・失敗理由は残す。
 - HUD、画面構成、見づらさ、配置、導線：[配置ガイド](references/layout.md)
