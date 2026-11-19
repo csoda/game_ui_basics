@@ -9,6 +9,7 @@ description: Design, implement, or review in-game HUDs, menus, inventory, contro
 
 ## 必要な資料だけ開く
 
+- UIを新しく作る・直す：[AIがゲームUIを作るときの注意点](references/ai-ui.md)を先に読む。頼まれていないキャッチコピーや「〇〇、〇〇。」調の文は足さない。説明は配置・形・動きで伝え、操作名や判断に必要な数字・失敗理由は残す。
 - HUD、画面構成、見づらさ、配置、導線：[配置ガイド](references/layout.md)
 - ボタンの反応、画面遷移、報酬、ゲージ、その他の動き：[演出カタログ](references/motion-patterns.md)。最初は目次から該当の10件だけ見る。
 - 完成前レビュー、端末や入力別の検証、A/Bの作り方：[確認手順](references/review.md)
