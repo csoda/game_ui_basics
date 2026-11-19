@@ -13,6 +13,18 @@ button:disabled{cursor:default;color:#a2b0bf;background:#172538}
 #port-stars{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated;pointer-events:none}
 #port-console{position:relative;z-index:1;height:100%;max-width:740px;margin:auto;padding:max(8px,env(safe-area-inset-top)) 9px max(8px,env(safe-area-inset-bottom));display:grid;grid-template-rows:minmax(52px,.95fr) minmax(85px,1.6fr) minmax(104px,1.9fr) minmax(113px,1.9fr) minmax(47px,.75fr);gap:7px;opacity:1}
 #port-console.paused{filter:brightness(.55)}
+#port-console.training #port-store,#port-console.training .port-foot,#port-console.training #port-incoming,#port-console.training #port-control-hint,#port-console.training #port-meter,#port-console.training #port-points,#port-console.training #port-head-clock,#port-console.training #port-phase{visibility:hidden}
+#port-console.training .port-head{grid-template-columns:1fr}
+#port-console.training .port-pane{max-height:none}
+#port-console.training .port-dock:disabled{opacity:.32}
+#port-console.training .port-empty{visibility:hidden}
+#port-console.training .port-ship.selected:disabled{opacity:.60}
+.port-next{border:2px solid #9df4d8!important;background:#23524d!important;color:#fff!important;outline:1px dashed #a8f3d9;outline-offset:2px;box-shadow:0 0 10px #6af3cd44!important}
+.port-next em,.port-next small{color:#f5ffd4!important;font-weight:bold}
+.port-next:focus-visible{outline:2px solid #ffdf85;outline-offset:2px}
+.port-next:disabled{opacity:1!important}
+.port-onboard-order{font-size:10px;color:#86dabe;white-space:nowrap}
+
 #port-console section,#port-console header,#port-console footer{min-width:0;border:1px solid var(--line);background:#0e1a30f3}
 #port-console h2,#port-console h1,p,figure{margin:0}
 .port-head{display:grid;grid-template-columns:1fr auto;align-items:center;padding:7px 9px;gap:4px}
@@ -109,7 +121,7 @@ button:disabled{cursor:default;color:#a2b0bf;background:#172538}
 <canvas id="port-stars" aria-hidden="true"></canvas>
 <main id="port-console" hidden>
 <header class="port-head"><div><div class="port-kicker">STAR HARBOR <span id="port-head-clock">70 s</span><span id="port-phase" aria-label="進行区間">Ⅰ</span></div><h1>ほしみなと管制局</h1></div><output id="port-points" aria-label="得点">0</output><div id="port-meter" aria-label="残り時間"><div id="port-time-fill"></div><i style="left:33%"></i><i style="left:66%"></i></div></header>
-<section class="port-pane" aria-labelledby="queue-heading"><div class="port-pane-label"><strong id="queue-heading">到着便</strong><span id="port-incoming"></span></div><div id="port-rows"></div></section>
+<section class="port-pane" aria-labelledby="queue-heading"><div class="port-pane-label"><strong id="queue-heading">到着便</strong><span id="port-learn-step" class="port-onboard-order" hidden></span><span id="port-incoming"></span></div><div id="port-rows"></div></section>
 <section class="port-pane" aria-labelledby="dock-heading"><div class="port-pane-label"><strong id="dock-heading">ドック</strong><span id="port-control-hint" class="port-eyebrow">船 → ドック</span></div><div id="port-docks" class="port-dock-grid"></div></section>
 <section id="port-store" class="port-pane" aria-labelledby="stock-heading"><div class="port-pane-label"><strong id="stock-heading">補給倉</strong><span id="port-credit"></span></div><div class="port-market" aria-label="仕入れ先"><button class="active" data-vendor="0" aria-pressed="true">港の商店</button><button data-vendor="1" aria-pressed="false">工房</button></div><div id="port-stock"></div></section>
 <footer class="port-foot"><div><div class="port-hull" aria-label="残り見逃し許容数"><span id="port-hull"></span><span id="port-chain"></span><span id="port-accepts"></span></div><div id="port-speed" hidden><span>急速</span><b data-priority="0"></b><b data-priority="1"></b><b data-priority="2"></b></div><div id="port-note" aria-live="polite"></div></div><button id="port-hud-report">航海手帳</button></footer>
@@ -119,7 +131,7 @@ button:disabled{cursor:default;color:#a2b0bf;background:#172538}
 <div id="port-overlay">
 <section id="port-panel-title" class="port-card"><div class="port-kicker">✦　O R B I T A L　D I S P A T C H　✦</div>
 <svg id="port-start-art" viewBox="0 0 150 38" aria-hidden="true" shape-rendering="crispEdges"><path fill="#293f5d" d="M0 29h150v2H0zM12 21h4v8h-4zM136 17h4v12h-4z"/><path fill="#536c91" d="M59 28h36v4H59zM66 22h22v6H66zM72 11h10v11H72zM76 4h2v7h-2z"/><path fill="#72eac9" d="M73 14h8v3h-8zM62 28h3v2h-3zM89 28h3v2h-3z"/><path fill="#314e68" d="M24 18h16v5H24zM27 13h10v5H27zM108 24h23v4h-23zM116 19h8v5h-8z"/><path fill="#ffdda0" d="M29 15h5v2h-5zM118 20h4v2h-4zM9 6h2v2H9zM51 4h2v2h-2zM104 9h2v2h-2zM142 8h2v2h-2z"/></svg>
-<h1>ほしみなと管制局</h1><p>船をドックに案内。<br>補給して、70秒で何隻出せる？</p><button id="port-start" class="port-primary port-launch">管制開始 ▸</button><div class="port-hgroup"><button id="port-title-report">航海手帳</button><button id="port-sound" aria-pressed="false">♪ OFF</button></div></section>
+<h1>ほしみなと管制局</h1><p>船に補給して、送り出そう。</p><button id="port-start" class="port-primary port-launch">管制開始 ▸</button><div class="port-hgroup"><button id="port-title-report" hidden>航海手帳</button><button id="port-sound" aria-pressed="false">♪ OFF</button></div></section>
 <section id="port-panel-result" class="port-card" hidden><div class="port-kicker">END OF SHIFT</div><h2 id="port-final-title"></h2><div id="port-final-score"></div><div id="port-final-detail"><span></span><span></span></div><div id="port-rank"></div><p>B 800　A 1,400　S 2,100</p><button id="port-retry" class="port-primary" hidden>次の便 ▸</button></section>
 <section id="port-panel-buy" class="port-card" role="dialog" aria-modal="true" aria-labelledby="port-buy-title" hidden><div class="port-kicker">RESTOCK</div><h2 id="port-buy-title"></h2><p id="port-buy-detail"></p><div class="port-hgroup"><button id="port-buy-back">戻る</button><button id="port-hold">長押しで仕入れ</button></div><button id="port-buy-key" hidden>仕入れを確定</button></section>
 <section id="port-panel-deal" class="port-card" role="dialog" aria-modal="true" aria-label="船の補給" hidden><h2 id="port-deal-title"></h2><p id="port-deal-detail"></p><div class="port-hgroup"><button id="port-deal-normal">通常</button><button id="port-deal-fast">急速</button></div><button id="port-deal-close">戻る</button></section>
@@ -131,7 +143,7 @@ const reduce=matchMedia('(prefers-reduced-motion: reduce)'), solo=parent===windo
 const names=['ミント','コメット','ペブル','クレセント','カナリア','ノヴァ','マル','ポラリス','クォーツ','スピカ','ルーチェ','ペコ','キャロット','モモ','ライム','ソラ'];
 const goods=['fuel','cargo','repair'], symbols={fuel:'◈',cargo:'▣',repair:'✚'}, look={fuel:'燃料',cargo:'荷物',repair:'修理'}, vals={fuel:'fuel',cargo:'cargo',repair:'parts'}, prices=[[2,2,4],[4,3,2]], batch=[3,3,3], DUR=70;
 const $ui={console:Q('#port-console'),overlay:Q('#port-overlay'),title:Q('#port-panel-title'),finish:Q('#port-panel-result'),buy:Q('#port-panel-buy'),deal:Q('#port-panel-deal'),queue:Q('#port-rows'),dock:Q('#port-docks'),store:Q('#port-stock'),float:Q('#port-float'),wire:Q('#port-wire'),line:Q('#port-line'),edge:Q('#port-edge')};
-let state,mode='title', previousMode='title',runs=[],raf=0,stamp=0,scene=0,drawW=320,drawH=548,particles=[],ac,muted=true,sent=false,holdId=null,holdBegan=0,holdProgress=0,buyItem=null,beginCheckout=0,lastServiceRender=-99,chosenVendor=0,activeShip=null,drag=null,chainBroke=0,damageAt=-99,notices=[],creditGain=0,creditBatch=-99,keyboardMode=false,reportOpen=false,settle=0,settleDetails=null,renderDirty=true,lastPaint=-10;
+let state,mode='title', previousMode='title',runs=[],raf=0,stamp=0,scene=0,drawW=320,drawH=548,particles=[],ac,muted=true,sent=false,holdId=null,holdBegan=0,holdProgress=0,buyItem=null,beginCheckout=0,lastServiceRender=-99,chosenVendor=0,activeShip=null,drag=null,chainBroke=0,damageAt=-99,notices=[],creditGain=0,creditBatch=-99,keyboardMode=false,reportOpen=false,settle=0,settleDetails=null,renderDirty=true,lastPaint=-10,learned=false,intro=0,introWork=0;
 const clamp=(x,min,max)=>Math.min(max,Math.max(min,x)),fmt=x=>Math.floor(x).toLocaleString('ja-JP'); const gc=(kind)=>'port-'+kind;
 function size(){if(mode==='done')return;let b=portCanvas.getBoundingClientRect(),s=Math.max(.92,b.width/450);drawW=Math.max(1,Math.round(b.width/s));drawH=Math.max(1,Math.round(b.height/s));portCanvas.width=drawW;portCanvas.height=drawH;pg.imageSmoothingEnabled=false;particles=Array.from({length:Math.floor(drawW*drawH/950)},(_,i)=>[Math.random()*drawW,Math.random()*drawH,Math.random()*.75+.2,(i*3)%7===0]);if(!raf)backdrop()}
 function rr(x,y,w,h,c){pg.fillStyle=c;pg.fillRect(Math.round(x),Math.round(y),Math.round(w),Math.round(h))}
@@ -142,17 +154,18 @@ function backdrop(){
 }
 function audio(){try{if(!ac){const A=window.AudioContext||window.webkitAudioContext;if(A)ac=new A}if(ac?.state==='suspended')ac.resume().catch(()=>{})}catch{}}
 function tone(hz,end=0,d=.11){if(muted||ac?.state!=='running')return;const o=ac.createOscillator(),v=ac.createGain(),n=ac.currentTime;o.type='triangle';o.frequency.setValueAtTime(hz,n);if(end)o.frequency.exponentialRampToValueAtTime(end,n+d);v.gain.setValueAtTime(.0001,n);v.gain.exponentialRampToValueAtTime(.055,n+.01);v.gain.exponentialRampToValueAtTime(.0001,n+d);o.connect(v);v.connect(ac.destination);o.start();o.stop(n+d+.03)}
-function init(){
+function init(teaching=!learned){
  state={elapsed:0,next:5.1,id:0,queue:[],docks:[null,null,null],score:0,served:0,missed:0,credits:9,fuel:3,cargo:3,parts:3,selected:null,chain:0,sec:DUR,events:[],frames:[],sample:-1};
- mode='play';sent=false;chosenVendor=0;document.querySelectorAll('[data-vendor]').forEach((n,i)=>{n.classList.toggle('active',i===0);n.setAttribute('aria-pressed',String(i===0))});reportOpen=false;holdId=null;buyItem=null;activeShip=null;drag=null;keyboardMode=false;settle=0;creditGain=0;creditBatch=-99;damageAt=-99;chainBroke=0;notices=[];renderDirty=true;
+ mode='play';intro=teaching?1:0;introWork=0;sent=false;chosenVendor=0;document.querySelectorAll('[data-vendor]').forEach((n,i)=>{n.classList.toggle('active',i===0);n.setAttribute('aria-pressed',String(i===0))});reportOpen=false;holdId=null;buyItem=null;activeShip=null;drag=null;keyboardMode=false;settle=0;creditGain=0;creditBatch=-99;damageAt=-99;chainBroke=0;notices=[];renderDirty=true;
  $ui.dock.textContent=''; $ui.store.textContent='';$ui.queue.textContent='';Q('#port-fx').querySelectorAll('.port-fly').forEach(e=>e.remove());
- $ui.title.hidden=$ui.finish.hidden=$ui.buy.hidden=$ui.deal.hidden=$ui.overlay.hidden=true;$ui.console.hidden=false;$ui.console.classList.remove('paused');Q('#port-glass').classList.remove('warn');
- initDocks();initStock();arrive('fuel');arrive('cargo');say('船を選んで、同じ印のドックへ。',6.5);tone(294,620,.18);
+ $ui.title.hidden=$ui.finish.hidden=$ui.buy.hidden=$ui.deal.hidden=$ui.overlay.hidden=true;$ui.console.hidden=false;$ui.console.classList.remove('paused');$ui.console.classList.toggle('training',!!intro);Q('#port-glass').classList.remove('warn');
+ initDocks();initStock();arrive('fuel');if(!intro){state.next=3.6;say('同じ印のドックなら補給が速い。',3.8)}tone(294,620,.18);
+ render();
  if(!raf){stamp=performance.now();raf=requestAnimationFrame(tick)}
 }
 function requestStart(){if(mode!=='title')return;audio();init()}
 function backTitle(){if(!solo||mode!=='done')return;mode='title';$ui.console.hidden=true;$ui.console.inert=false;$ui.console.classList.remove('terminal','paused');$ui.finish.hidden=true;$ui.title.hidden=false;$ui.overlay.hidden=false;Q('#port-glass').classList.remove('warn');size();stamp=performance.now();raf=requestAnimationFrame(tick);}
-Q('#port-start').addEventListener('pointerdown',e=>{e.preventDefault();requestStart()});Q('#port-start').onclick=requestStart;
+Q('#port-start').addEventListener('pointerdown',e=>{e.preventDefault();requestStart()});Q('#port-start').onclick=e=>{requestStart();if(e.detail===0&&intro){keyboardMode=true;guideFocus()}};
 Q('#port-retry').addEventListener('pointerdown',e=>{e.preventDefault();backTitle()});Q('#port-retry').onclick=backTitle;
 Q('#port-sound').addEventListener('pointerdown',audio);Q('#port-sound').onclick=()=>{muted=!muted;audio();Q('#port-sound').setAttribute('aria-pressed',String(!muted));Q('#port-sound').textContent=muted?'♪ OFF':'♪ ON';tone(510,640)};
 function arrive(force){
@@ -173,7 +186,12 @@ function shipRow(ship){
  const b=document.createElement('button');b.dataset.ship=ship.id;b.className='port-ship';b.innerHTML='<span class="port-glyph '+gc(ship.request)+'">'+symbols[ship.request]+'</span><b>'+ship.name+'</b><em class="'+gc(ship.request)+'">'+look[ship.request]+'</em><small></small><i class="patience"></i>';
  b.setAttribute('aria-label',ship.name+' '+look[ship.request]);b.addEventListener('pointerdown',e=>dragStart(e,ship,b));b.onclick=()=>{if(b.dataset.ignore==='1'){b.dataset.ignore='';return}if(mode==='play'&&!reportOpen)chooseShip(ship.id)};return b;
 }
-function chooseShip(id){if(!state.queue.some(s=>s.id===id))return;state.selected=state.selected===id?null:id;tone(332,395,.05);renderDirty=true}
+function setIntro(step){intro=step;renderDirty=true;render();guideFocus()}
+function guideFocus(){if(!keyboardMode||!intro)return;if(intro===1)$ui.queue.children[0]?.focus({preventScroll:true});else if(intro!==4)$ui.dock.children[0]?.focus({preventScroll:true});}
+function chooseShip(id){
+ if(!state.queue.some(s=>s.id===id)||intro>1)return;
+ state.selected=state.selected===id?null:id;tone(332,395,.05);renderDirty=true;if(intro===1)setIntro(2)
+}
 function initDocks(){
  goods.forEach((request,i)=>{const b=document.createElement('button');b.className='port-dock';b.dataset.dock=i;b.innerHTML='<span class="port-badge"><span>DOCK '+(i+1)+'</span><span class="port-glyph '+gc(request)+'">'+symbols[request]+'</span></span><strong></strong><em></em><span class="remain"><i></i></span>';b.onclick=()=>dockClick(i);$ui.dock.append(b)});
 }
@@ -182,6 +200,13 @@ function initStock(){
 }
 function dockClick(i){
  if(mode!=='play'||reportOpen)return;
+ if(intro){
+  if(i!==0)return;
+  if(intro===2&&dispatch(state.selected,0)){setIntro(3);return}
+  if(intro===3){const ship=state.docks[0];if(!ship)return;ship.service='active';ship.rem=ship.total=.62;introWork=.62;tone(330,530,.12);setIntro(4);return}
+  if(intro===5){learned=true;Q('#port-title-report').hidden=false;init(false);say('管制開始！',1.3);return}
+  return;
+ }
  const ship=state.docks[i];if(ship){
   if(ship.service==='ready')depart(i);
   else if(ship.service==='docked')openService(ship);
@@ -225,7 +250,7 @@ function depart(i){
  say(ship.name+'：出港');tone(410,520+Math.min(state.chain,9)*24,.14);renderDirty=true;return true;
 }
 function dragStart(e,ship,b){
- if(mode!=='play'||drag||e.button>0)return;
+ if(mode!=='play'||drag||e.button>0||intro)return;
  keyboardMode=false;drag={id:e.pointerId,ship,from:b,x:e.clientX,y:e.clientY,sx:e.clientX,sy:e.clientY,held:false,dock:-1,ghostUntil:0};
  b.dataset.ignore=''; b.setPointerCapture?.(e.pointerId);
 }
@@ -256,7 +281,7 @@ function endDrag(e,ok){
 }
 window.addEventListener('pointerup',e=>endDrag(e,true));
 window.addEventListener('pointercancel',e=>endDrag(e,false));
-window.addEventListener('keydown',e=>{if(e.key==='Tab'||e.key.startsWith('Arrow')){keyboardMode=true;renderDirty=true}if(e.key==='Escape'){if(mode==='buy')closeBuy();else if(mode==='service'){window.portService?.dismiss?.();closeService()}}});
+window.addEventListener('keydown',e=>{if(e.key==='Tab'||e.key.startsWith('Arrow')||(e.key==='Enter'&&intro)){keyboardMode=true;renderDirty=true}if(e.key==='Escape'){if(mode==='buy')closeBuy();else if(mode==='service'){window.portService?.dismiss?.();closeService()}}});
 window.addEventListener('pointerdown',()=>{if(keyboardMode){keyboardMode=false;renderDirty=true}},true);
 function fly(from,to,word,ms=300){
  if(!from||!to)return;
@@ -274,7 +299,7 @@ function setVendor(i){
 }
 document.querySelectorAll('[data-vendor]').forEach((n,i)=>n.onclick=()=>setVendor(i));
 function offerBuy(i){
- if(mode!=='play'||!Number.isInteger(i)||i<0||i>2)return;
+ if(mode!=='play'||intro||!Number.isInteger(i)||i<0||i>2)return;
  const price=prices[chosenVendor][i];if(state.credits<price){
   const label=$ui.store.children[i].querySelector('.port-price');label.classList.remove('shake');void label.offsetWidth;label.classList.add('shake');tone(154,117);return;
  }
@@ -304,13 +329,17 @@ function buyDone(){
  const {i,item,price}=buyItem;beginCheckout=0;state.credits-=price;state[vals[item]]+=batch[i];event('supply',look[item]);say(look[item]+' +'+batch[i]);tone(370,620);closeBuy();renderDirty=true;
 }
 function showReports(){
- if(reportOpen||!['title','play'].includes(mode)||!window.portReports)return;
+ if(!learned||intro||reportOpen||!['title','play'].includes(mode)||!window.portReports)return;
  previousMode=mode;reportOpen=true;mode='reports';$ui.console.classList.add('paused');$ui.console.inert=true;$ui.overlay.hidden=true;
  window.portReports.open(snapshot(),()=>{if(!reportOpen)return;reportOpen=false;mode=previousMode;$ui.console.classList.remove('paused');$ui.console.inert=false;$ui.overlay.hidden=mode!=='title';Q(mode==='title'?'#port-title-report':'#port-hud-report').focus({preventScroll:true});renderDirty=true;});
 }
 Q('#port-title-report').onclick=showReports;Q('#port-hud-report').onclick=showReports;
 function advance(dt){
  if(!['play','service','buy'].includes(mode))return;
+ if(intro){
+  if(intro===4){introWork=Math.max(0,introWork-dt);const ship=state.docks[0];ship.rem=introWork;renderDirty=true;if(introWork===0){ship.service='ready';tone(550,720,.10);setIntro(5)}}
+  return;
+ }
  state.elapsed=Math.min(DUR,state.elapsed+dt);state.sec=DUR-state.elapsed;
  if(state.sample!==Math.floor(state.elapsed)){state.sample=Math.floor(state.elapsed);state.frames.push({elapsed:state.elapsed,score:state.score,served:state.served,missed:state.missed})}
  if(state.elapsed>=DUR){finish(true);return}
@@ -333,20 +362,26 @@ function render(){
  for(const b of [...$ui.queue.children]){if(b.dataset.ship!==undefined&&!wanted.has(b.dataset.ship))b.remove();if(b.classList.contains('port-empty'))b.remove()}
  for(const ship of state.queue){
   let b=$ui.queue.querySelector('[data-ship="'+ship.id+'"]');if(!b){b=shipRow(ship);$ui.queue.append(b)}
-  b.classList.toggle('selected',state.selected===ship.id);b.setAttribute('aria-pressed',String(state.selected===ship.id));b.classList.toggle('risk',ship.patience<6);
-  b.querySelector('small').textContent=Math.ceil(ship.patience)+'s';b.querySelector('i').style.width=(ship.patience/ship.max*100)+'%';
+  b.classList.toggle('selected',state.selected===ship.id);b.setAttribute('aria-pressed',String(state.selected===ship.id));b.classList.toggle('risk',!intro&&ship.patience<6);
+  b.classList.toggle('port-next',intro===1);b.disabled=!!intro&&intro!==1;
+  b.querySelector('small').textContent=intro?(intro===1?'選ぶ ▸':''):(Math.ceil(ship.patience)+'s');b.querySelector('i').style.width=(intro?0:ship.patience/ship.max*100)+'%';
+  b.setAttribute('aria-label',ship.name+' '+look[ship.request]+(intro===1?' を選ぶ':''));
  }
  for(let i=n;i<3;i++){const b=doc.createElement('div');b.className='port-empty';b.textContent=i===0?'— 到着待ち':'—';$ui.queue.append(b)}
+ const learnLabel=Q('#port-learn-step');learnLabel.hidden=!intro;learnLabel.textContent=intro===1?'練習 1 / 4':intro===2?'練習 2 / 4':intro===3||intro===4?'練習 3 / 4':'練習 4 / 4';
  const next=Math.max(0,state.next-state.elapsed);Q('#port-incoming').textContent='▸ 次便 '+Math.ceil(next)+'s';
- const incomingAtEdge=n===3&&next<3&&mode==='play';
+ const incomingAtEdge=!intro&&n===3&&next<3&&mode==='play';
  $ui.edge.hidden=!incomingAtEdge;Q('#port-incoming').style.visibility=incomingAtEdge?'hidden':'visible';
  if(incomingAtEdge)$ui.edge.textContent='▸ 次便 '+Math.ceil(next)+'s ／ 到着枠が満杯';
  [...$ui.dock.children].forEach((b,i)=>{
   const ship=state.docks[i];let main=b.querySelector('strong'),detail=b.querySelector('em'),remain=b.querySelector('.remain i');
   b.classList.toggle('ready',ship?.service==='ready');b.classList.toggle('vacant',!ship);
+  b.disabled=!!intro&&(i!==0||intro===1||intro===4);b.classList.toggle('port-next',!!intro&&i===0&&[2,3,5].includes(intro));
   main.textContent=ship?ship.name:'空き';b.querySelector('.port-glyph').textContent=symbols[goods[i]];
   const p=ship?.service==='active'?Math.max(0,ship.rem/ship.total):0;remain.style.width=p*100+'%';
-  const tag=ship?.service==='ready'?'出港 ▸':ship?.service==='active'?Math.ceil(ship.rem)+'s':ship?'補給 ▸':look[goods[i]]+'が得意';
+  const tag=intro?
+  (i!==0?'　':intro===2?'ここに着ける ▸':intro===3?'給油する ▸':intro===4?'給油中…':intro===5?'出港する ▸':'　'):
+  (ship?.service==='ready'?'出港 ▸':ship?.service==='active'?Math.ceil(ship.rem)+'s':ship?'補給 ▸':look[goods[i]]+'が得意');
   if(ship?.service==='active'){
    if(!detail.querySelector('.dial'))detail.innerHTML='<i class="dial" aria-hidden="true"></i> <span></span>';
    detail.querySelector('.dial').style.setProperty('--a',1-p);detail.querySelector('span').textContent=tag;
