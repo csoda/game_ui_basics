@@ -166,6 +166,16 @@ button:disabled{cursor:default;color:#a2b0bf;background:#172538}
 #port-console.traffic-paused .port-dock.working .port-parked::after{animation-play-state:paused}
 @media(max-height:500px){.port-dock{grid-template-rows:auto minmax(15px,1fr) auto auto}.port-dock .port-berth{min-height:16px}}
 @media(prefers-reduced-motion:reduce){.port-dock.ready .port-parked{transform:none}.port-dock.working .port-parked::after{animation:none!important}}
+.port-slot{position:relative;min-width:0;min-height:0;display:grid}
+.port-slot>.port-dock{height:100%;width:100%}
+.port-priority{position:absolute;right:2px;bottom:2px;z-index:2;min-width:44px;min-height:44px;padding:3px;font-size:10px;background:#243e53;border-color:#678798;box-shadow:none;color:#d8e7f0}
+.port-dock .port-occupant{display:flex;align-items:center;gap:3px}.port-dock .port-occupant span:last-child{min-width:0;overflow:hidden;text-overflow:ellipsis}.port-manifest{width:13px;height:13px;display:block;flex:none}
+.port-dock.offer em,.port-dock.short em{padding-right:42px;font-weight:bold;color:#d3f6dd;letter-spacing:-.05em}
+.port-dock.short em{color:#ffd0aa}
+.port-dock.offer,.port-dock.short{padding-bottom:5px}
+.port-dock.offer .port-berth,.port-dock.short .port-berth{margin-right:2px}
+#port-buy-key{min-height:44px}
+@media(max-width:369px){.port-priority{font-size:9px}}
 </style></head><body>
 <canvas id="port-stars" aria-hidden="true"></canvas>
 <main id="port-console" hidden>
@@ -182,7 +192,7 @@ button:disabled{cursor:default;color:#a2b0bf;background:#172538}
 <svg id="port-start-art" viewBox="0 0 150 38" aria-hidden="true" shape-rendering="crispEdges"><path fill="#293f5d" d="M0 29h150v2H0zM12 21h4v8h-4zM136 17h4v12h-4z"/><path fill="#536c91" d="M59 28h36v4H59zM66 22h22v6H66zM72 11h10v11H72zM76 4h2v7h-2z"/><path fill="#72eac9" d="M73 14h8v3h-8zM62 28h3v2h-3zM89 28h3v2h-3z"/><path fill="#314e68" d="M24 18h16v5H24zM27 13h10v5H27zM108 24h23v4h-23zM116 19h8v5h-8z"/><path fill="#ffdda0" d="M29 15h5v2h-5zM118 20h4v2h-4zM9 6h2v2H9zM51 4h2v2h-2zM104 9h2v2h-2zM142 8h2v2h-2z"/></svg>
 <h1>ほしみなと管制局</h1><p>船に補給して、送り出そう。</p><button id="port-start" class="port-primary port-launch">管制開始 ▸</button><div class="port-hgroup"><button id="port-title-report" hidden>航海手帳</button><button id="port-sound" aria-pressed="false">♪ OFF</button></div></section>
 <section id="port-panel-result" class="port-card" hidden><div class="port-kicker">END OF SHIFT</div><h2 id="port-final-title"></h2><div id="port-final-score"></div><div id="port-final-detail"><span></span><span></span></div><div id="port-rank"></div><p>B 800　A 1,400　S 2,100</p><button id="port-retry" class="port-primary" hidden>次の便 ▸</button></section>
-<section id="port-panel-buy" class="port-card" role="dialog" aria-modal="true" aria-labelledby="port-buy-title" hidden><div class="port-kicker">RESTOCK</div><h2 id="port-buy-title"></h2><p id="port-buy-detail"></p><div class="port-hgroup"><button id="port-buy-back">戻る</button><button id="port-hold">長押しで仕入れ</button></div><button id="port-buy-key" hidden>仕入れを確定</button></section>
+<section id="port-panel-buy" class="port-card" role="dialog" aria-modal="true" aria-labelledby="port-buy-title" hidden><div class="port-kicker">RESTOCK</div><h2 id="port-buy-title"></h2><p id="port-buy-detail"></p><div class="port-hgroup"><button id="port-buy-back">戻る</button><button id="port-hold">長押しで仕入れ</button></div><button id="port-buy-key" hidden>タップで購入</button></section>
 <section id="port-panel-deal" class="port-card" role="dialog" aria-modal="true" aria-label="船の補給" hidden><h2 id="port-deal-title"></h2><p id="port-deal-detail"></p><div class="port-hgroup"><button id="port-deal-normal">通常</button><button id="port-deal-fast">急速</button></div><button id="port-deal-close">戻る</button></section>
 </div>
 <script>
@@ -193,7 +203,7 @@ const names=['ミント','コメット','ペブル','クレセント','カナリ
 const goods=['fuel','cargo','repair'], symbols={fuel:'◈',cargo:'▣',repair:'✚'}, look={fuel:'燃料',cargo:'荷物',repair:'部品'}, vals={fuel:'fuel',cargo:'cargo',repair:'parts'}, prices=[[2,2,4],[4,3,2]], batch=[3,3,3], DUR=70;
 const $ui={console:Q('#port-console'),overlay:Q('#port-overlay'),title:Q('#port-panel-title'),finish:Q('#port-panel-result'),buy:Q('#port-panel-buy'),deal:Q('#port-panel-deal'),queue:Q('#port-rows'),dock:Q('#port-docks'),store:Q('#port-stock'),float:Q('#port-float'),wire:Q('#port-wire'),line:Q('#port-line'),edge:Q('#port-edge')};
 let state,mode='title', previousMode='title',runs=[],raf=0,stamp=0,scene=0,drawW=320,drawH=548,particles=[],ac,muted=true,sent=false,holdId=null,holdBegan=0,holdProgress=0,buyItem=null,beginCheckout=0,lastServiceRender=-99,chosenVendor=0,activeShip=null,drag=null,chainBroke=0,damageAt=-99,notices=[],creditGain=0,creditBatch=-99,keyboardMode=false,reportOpen=false,settle=0,settleDetails=null,renderDirty=true,lastPaint=-10,learned=false,intro=0,introWork=0;
-const movingCraft=new Set();
+const movingCraft=new Set(),dockButtons=[],priorityButtons=[];let pendingWork=null;
 const clamp=(x,min,max)=>Math.min(max,Math.max(min,x)),fmt=x=>Math.floor(x).toLocaleString('ja-JP'); const gc=(kind)=>'port-'+kind;
 const SHAPES={fuel:'M12 2C10.8 4.9 5.5 9.1 5.5 14a6.5 6.5 0 0 0 13 0C18.5 9.1 13.3 4.9 12 2ZM9 14a3 3 0 0 0 3 3',cargo:'M3.5 5.5h17v14h-17zM3.5 10.5h17m-11 1v3h5v-3M7.5 5.5v5m9-5v5',repair:'M15.5 4l-2 3 2 2 3-2a5 5 0 0 1-6 6l-5 6-3-3 6-5a5 5 0 0 1 5-7Z'};
 function visualSymbol(kind){return '<svg class="port-symbol" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="'+SHAPES[kind]+'" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>'}
@@ -224,8 +234,8 @@ function audio(){try{if(!ac){const A=window.AudioContext||window.webkitAudioCont
 function tone(hz,end=0,d=.11){if(muted||ac?.state!=='running')return;const o=ac.createOscillator(),v=ac.createGain(),n=ac.currentTime;o.type='triangle';o.frequency.setValueAtTime(hz,n);if(end)o.frequency.exponentialRampToValueAtTime(end,n+d);v.gain.setValueAtTime(.0001,n);v.gain.exponentialRampToValueAtTime(.055,n+.01);v.gain.exponentialRampToValueAtTime(.0001,n+d);o.connect(v);v.connect(ac.destination);o.start();o.stop(n+d+.03)}
 function init(teaching=!learned){
  state={elapsed:0,next:5.1,id:0,queue:[],docks:[null,null,null],score:0,served:0,missed:0,credits:9,fuel:3,cargo:3,parts:3,selected:null,chain:0,sec:DUR,events:[],frames:[],sample:-1};
- clearCraft();trafficPause(false);mode='play';intro=teaching?1:0;introWork=0;sent=false;chosenVendor=0;document.querySelectorAll('[data-vendor]').forEach((n,i)=>{n.classList.toggle('active',i===0);n.setAttribute('aria-pressed',String(i===0))});reportOpen=false;holdId=null;buyItem=null;activeShip=null;drag=null;keyboardMode=false;settle=0;creditGain=0;creditBatch=-99;damageAt=-99;chainBroke=0;notices=[];renderDirty=true;
- $ui.dock.textContent=''; $ui.store.textContent='';$ui.queue.textContent='';Q('#port-fx').querySelectorAll('.port-fly').forEach(e=>e.remove());
+ clearCraft();trafficPause(false);mode='play';intro=teaching?1:0;introWork=0;pendingWork=null;sent=false;chosenVendor=0;document.querySelectorAll('[data-vendor]').forEach((n,i)=>{n.classList.toggle('active',i===0);n.setAttribute('aria-pressed',String(i===0))});reportOpen=false;holdId=null;buyItem=null;activeShip=null;drag=null;keyboardMode=false;settle=0;creditGain=0;creditBatch=-99;damageAt=-99;chainBroke=0;notices=[];renderDirty=true;
+ $ui.dock.textContent='';dockButtons.length=0;priorityButtons.length=0; $ui.store.textContent='';$ui.queue.textContent='';Q('#port-fx').querySelectorAll('.port-fly').forEach(e=>e.remove());
  $ui.title.hidden=$ui.finish.hidden=$ui.buy.hidden=$ui.deal.hidden=$ui.overlay.hidden=true;$ui.console.hidden=false;$ui.console.classList.remove('paused');$ui.console.classList.toggle('training',!!intro);Q('#port-glass').classList.remove('warn');
  initDocks();initStock();arrive(intro?'fuel':'cargo');if(!intro)state.next=4.4;tone(294,620,.18);
  render();
@@ -255,13 +265,13 @@ function shipRow(ship){
  b.setAttribute('aria-label',ship.name+' '+look[ship.request]);b.addEventListener('pointerdown',e=>dragStart(e,ship,b));b.onclick=()=>{if(b.dataset.ignore==='1'){b.dataset.ignore='';return}if(mode==='play'&&!reportOpen)chooseShip(ship.id)};return b;
 }
 function setIntro(step){intro=step;renderDirty=true;render();guideFocus()}
-function guideFocus(){if(!keyboardMode||!intro)return;if(intro===1)$ui.queue.children[0]?.focus({preventScroll:true});else if(intro!==4)$ui.dock.children[0]?.focus({preventScroll:true});}
+function guideFocus(){if(!keyboardMode||!intro)return;if(intro===1)$ui.queue.children[0]?.focus({preventScroll:true});else if(intro!==4&&intro!==6)dockButtons[0]?.focus({preventScroll:true});}
 function chooseShip(id){
  if(!state.queue.some(s=>s.id===id)||intro>1)return;
  state.selected=state.selected===id?null:id;tone(332,395,.05);renderDirty=true;if(intro===1)setIntro(2)
 }
 function initDocks(){
- goods.forEach((request,i)=>{const b=document.createElement('button');b.className='port-dock';b.dataset.dock=i;b.innerHTML='<span class="port-badge"><span class="port-badge-icon '+gc(request)+'">'+visualSymbol(request)+'</span><span>'+String(i+1).padStart(2,'0')+'</span><span class="port-status blank" aria-hidden="true"></span></span><span class="port-berth '+gc(request)+'"><span class="port-socket">'+visualSymbol(request)+'</span><span class="port-parked" hidden></span><span class="port-fill" hidden><b></b></span></span><strong></strong><em></em><span class="port-speedbar" hidden><i></i></span><span class="remain"><i></i></span>';b.onclick=()=>dockClick(i);$ui.dock.append(b)});
+ goods.forEach((request,i)=>{const b=document.createElement('button');b.className='port-dock';b.dataset.dock=i;b.innerHTML='<span class="port-badge"><span class="port-badge-icon '+gc(request)+'">'+visualSymbol(request)+'</span><span>'+String(i+1).padStart(2,'0')+'</span><span class="port-status blank" aria-hidden="true"></span></span><span class="port-berth '+gc(request)+'"><span class="port-socket">'+visualSymbol(request)+'</span><span class="port-parked" hidden></span><span class="port-fill" hidden><b></b></span></span><strong class="port-occupant"><span class="port-manifest" hidden></span><span class="port-shipname"></span></strong><em></em><span class="port-speedbar" hidden><i></i></span><span class="remain"><i></i></span>';b.onclick=()=>dockClick(i);const slot=document.createElement('div'),p=document.createElement('button');slot.className='port-slot';p.className='port-priority';p.textContent='優先…';p.hidden=true;p.setAttribute('aria-label','ドック'+(i+1)+' 優先補給の比較');p.onclick=()=>{const ship=state?.docks[i];if(ship?.service==='docked')openService(ship,1)};dockButtons.push(b);priorityButtons.push(p);slot.append(b,p);$ui.dock.append(slot)});
 }
 function initStock(){
  goods.forEach((request,i)=>{const b=document.createElement('button');b.className='port-good';b.dataset.good=i;b.innerHTML='<span class="port-item-name '+gc(request)+'">'+visualSymbol(request)+look[request]+'</span><b></b><span class="port-price"></span>';b.onclick=()=>offerBuy(i);$ui.store.append(b)});
@@ -272,12 +282,12 @@ function dockClick(i){
   if(i!==0)return;
   if(intro===2&&dispatch(state.selected,0)){setIntro(3);return}
   if(intro===3){const ship=state.docks[0];if(!ship)return;ship.service='active';ship.rem=ship.total=.62;introWork=.62;tone(330,530,.12);setIntro(4);return}
-  if(intro===5){const ship=state.docks[0],dock=$ui.dock.children[0];craftTravel(ship,dock.querySelector('.port-parked'),dock,true);state.docks[0]=null;state.departed=[scene+.48,0,0];introWork=.45;setIntro(6);return}
+  if(intro===5){const ship=state.docks[0],dock=dockButtons[0];craftTravel(ship,dock.querySelector('.port-parked'),dock,true);state.docks[0]=null;state.departed=[scene+.48,0,0];introWork=.45;setIntro(6);return}
   return;
  }
  const ship=state.docks[i];if(ship){
   if(ship.service==='ready')depart(i);
-  else if(ship.service==='docked')openService(ship);
+  else if(ship.service==='docked'&&scene>=ship.armAt){if(state[vals[ship.request]]>=1)beginWork(ship,'standard');else startRestock(ship,{task:'normal'});}
   return;
  }
  if(state.selected!==null&&dispatch(state.selected,i))return;
@@ -287,41 +297,49 @@ function dispatch(id,i){
  if(mode!=='play'||state.docks[i]||!Number.isInteger(i)||i<0||i>=3)return false;
  const j=state.queue.findIndex(s=>s.id===id);if(j<0)return false;
  const old=$ui.queue.querySelector('[data-ship="'+id+'"]')?.querySelector('.port-miniship');
- const dest=$ui.dock.children[i]?.querySelector('.port-berth');
- const ship=state.queue.splice(j,1)[0];craftTravel(ship,old,dest);ship.berth=i;ship.service='docked';ship.urgency=clamp(1-ship.patience/ship.max,0,1);ship.patience=Math.max(8,ship.patience);state.docks[i]=ship;state.selected=null;
+ const dest=dockButtons[i]?.querySelector('.port-berth');
+ const ship=state.queue.splice(j,1)[0];craftTravel(ship,old,dest);ship.berth=i;ship.armAt=scene+(reduce.matches?.12:.28);ship.service='docked';ship.urgency=clamp(1-ship.patience/ship.max,0,1);ship.patience=Math.max(8,ship.patience);state.docks[i]=ship;state.selected=null;
  event('dock',ship.name);say(ship.name+'：接岸');tone(270,430);renderDirty=true;return true;
 }
 function rates(ship){const quick=goods[ship.berth]===ship.request;const long=quick?4.2:6.1;return {standard:{score:100,seconds:long,cost:1},priority:{score:150,seconds:Math.round(long*5.5)/10,cost:2}}}
-function snapshot(ship){return {best:runs.reduce((b,r)=>Math.max(b,r.score),0),runs:runs.slice(),score:state?.score||0,served:state?.served||0,missed:state?.missed||0,sec:state?.sec??DUR,credits:state?.credits??9,fuel:state?.fuel??3,cargo:state?.cargo??3,parts:state?.parts??3,frames:state?.frames.slice()||[],events:state?.events.slice()||[],...(ship?{rates:rates(ship),resource:vals[ship.request],restock:()=>directStock(ship.request)}:{})}}
-function directStock(kind){
- if(mode!=='service')return;
- window.portService?.dismiss?.();closeService();
- const ix=goods.indexOf(kind),node=$ui.store.children[ix];
- state.shopFocus=ix;renderDirty=true;render();node?.focus({preventScroll:true});
+function snapshot(ship){return {best:runs.reduce((b,r)=>Math.max(b,r.score),0),runs:runs.slice(),score:state?.score||0,served:state?.served||0,missed:state?.missed||0,sec:state?.sec??DUR,credits:state?.credits??9,fuel:state?.fuel??3,cargo:state?.cargo??3,parts:state?.parts??3,frames:state?.frames.slice()||[],events:state?.events.slice()||[],...(ship?{rates:rates(ship),resource:vals[ship.request],restock:choice=>serviceRestock(ship,choice)}:{})}}
+function startRestock(ship,intent){
+ if(mode!=='play'||ship?.service!=='docked'||state.docks[ship.berth]!==ship)return;
+ pendingWork={...intent,id:ship.id,berth:ship.berth};
+ const index=goods.indexOf(ship.request);state.shopFocus=index;offerBuy(index,true);
 }
-function openService(ship){
- if(mode!=='play'||ship.service!=='docked')return;
- activeShip=ship;lastServiceRender=state.elapsed;mode='service';$ui.console.classList.add('paused');if('inert' in $ui.console)$ui.console.inert=true;
+function serviceRestock(ship,choice){
+ if(mode!=='service'||activeShip!==ship)return;
+ window.portService?.dismiss?.();closeService();
+ startRestock(ship,{task:'priority',choice:choice===0?0:1});
+}
+function openService(ship,choice=1){
+ if(mode!=='play'||ship?.service!=='docked'||scene<ship.armAt)return;
+ activeShip=ship;lastServiceRender=state.elapsed;mode='service';trafficPause(true);$ui.console.classList.add('paused');if('inert' in $ui.console)$ui.console.inert=true;
  const commit=(opt)=>commitService(ship,opt);const close=()=>closeService();
- if(window.portService)window.portService.open({...ship},snapshot(ship),commit,close);
+ if(window.portService)window.portService.open({...ship},{...snapshot(ship),choice},commit,close);
  else {$ui.overlay.hidden=false;$ui.deal.hidden=false;Q('#port-deal-title').textContent=ship.name+' ／ '+look[ship.request];Q('#port-deal-detail').textContent='通常 1個　急速 2個';Q('#port-deal-normal').focus()}
 }
 function commitService(ship,opt){
- const kind=opt?.kind;if(!['priority','standard'].includes(kind)||mode!=='service'||activeShip!==ship||ship.service!=='docked'||state.docks[ship.berth]!==ship)return {ok:false,reason:'この便は補給できません'};
+ if(mode!=='service'||activeShip!==ship)return {ok:false,reason:'この便は補給できません'};
+ return beginWork(ship,opt?.kind);
+}
+function beginWork(ship,kind){
+ if(!['priority','standard'].includes(kind)||!['play','service'].includes(mode)||ship?.service!=='docked'||state.docks[ship.berth]!==ship)return {ok:false,reason:'この便は補給できません'};
  const rate=rates(ship)[kind], key=vals[ship.request];if(state[key]<rate.cost)return {ok:false,reason:look[ship.request]+'が '+(rate.cost-state[key])+' 個不足'};
  state[key]-=rate.cost;ship.service='active';ship.rem=ship.total=rate.seconds;ship.reward=rate.score;ship.priority=kind==='priority';ship.readyAge=0;
- fly($ui.store.children[goods.indexOf(ship.request)],$ui.dock.children[ship.berth],'−'+rate.cost,220);event('supply',ship.name);say(ship.name+'：補給開始');tone(280,490,.13);renderDirty=true;return {ok:true};
+ fly($ui.store.children[goods.indexOf(ship.request)],dockButtons[ship.berth],'−'+rate.cost,220);event('supply',ship.name);say(ship.name+'：補給開始');tone(280,490,.13);renderDirty=true;return {ok:true};
 }
 function closeService(){
- if(mode!=='service')return;const ix=activeShip?.berth;activeShip=null;mode='play';$ui.deal.hidden=true;$ui.overlay.hidden=true;$ui.console.classList.remove('paused');$ui.console.inert=false;
- $ui.dock.children[ix]?.focus({preventScroll:true});
+ if(mode!=='service')return;const ix=activeShip?.berth;activeShip=null;mode='play';trafficPause(false);$ui.deal.hidden=true;$ui.overlay.hidden=true;$ui.console.classList.remove('paused');$ui.console.inert=false;
+ dockButtons[ix]?.focus({preventScroll:true});
 }
 for(const [id,kind] of [['#port-deal-normal','standard'],['#port-deal-fast','priority']])Q(id).onclick=()=>{let r=commitService(activeShip,{kind});if(r.ok)closeService();else Q('#port-deal-detail').textContent=r.reason};
 Q('#port-deal-close').onclick=closeService;
 function depart(i){
  const ship=state.docks[i];if(mode!=='play'||ship?.service!=='ready')return false;
- const berth=$ui.dock.children[i];craftTravel(ship,berth.querySelector('.port-parked'),berth,true);state.departed??=[0,0,0];state.departed[i]=scene+.48;state.docks[i]=null;state.chain++;const times=Math.min(4,1+Math.floor((state.chain-1)/3)),earned=ship.reward*times;
- state.score+=earned;state.served++;state.credits+=2;event('depart',ship.name);fly($ui.dock.children[i],Q('#port-points'),'+'+earned,310);
+ const berth=dockButtons[i];craftTravel(ship,berth.querySelector('.port-parked'),berth,true);state.departed??=[0,0,0];state.departed[i]=scene+.48;state.docks[i]=null;state.chain++;const times=Math.min(4,1+Math.floor((state.chain-1)/3)),earned=ship.reward*times;
+ state.score+=earned;state.served++;state.credits+=2;event('depart',ship.name);fly(dockButtons[i],Q('#port-points'),'+'+earned,310);
  if(state.elapsed-creditBatch<.32){creditGain+=2;}else creditGain=2;creditBatch=state.elapsed;
  say(ship.name+'：出港');tone(410,520+Math.min(state.chain,9)*24,.14);renderDirty=true;return true;
 }
@@ -331,7 +349,7 @@ function dragStart(e,ship,b){
  b.dataset.ignore=''; b.setPointerCapture?.(e.pointerId);
 }
 function toDock(x,y){
- return [...$ui.dock.children].findIndex(b=>{const r=b.getBoundingClientRect();return x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom});
+ return [...dockButtons].findIndex(b=>{const r=b.getBoundingClientRect();return x>=r.left&&x<=r.right&&y>=r.top&&y<=r.bottom});
 }
 function wire(ax,ay,bx,by,dotted=true){for(const [k,v] of Object.entries({x1:ax,y1:ay,x2:bx,y2:by}))$ui.line.setAttribute(k,v);$ui.line.setAttribute('stroke-dasharray',dotted?'5 5':'none');$ui.wire.hidden=false}
 let solidWire=0;
@@ -341,14 +359,14 @@ window.addEventListener('pointermove',e=>{
  if(!d.held&&Math.hypot(d.x-d.sx,d.y-d.sy)<7)return;
  if(!d.held){d.held=true;d.from.dataset.ignore='1';d.from.classList.add('taking');$ui.float.innerHTML='<span class="port-miniship">'+craft(d.ship.request)+'</span><span class="port-request '+gc(d.ship.request)+'">'+visualSymbol(d.ship.request)+'</span>';$ui.float.hidden=false}
  $ui.float.style.left=(d.x+5)+'px';$ui.float.style.top=(d.y-16)+'px';d.dock=toDock(d.x,d.y);
- [...$ui.dock.children].forEach((b,i)=>{b.classList.toggle('can-drop',!state.docks[i]);b.classList.toggle('drop-over',i===d.dock&&!state.docks[i])});
- $ui.wire.hidden=true;if(d.dock>=0&&!state.docks[d.dock]){const r=$ui.dock.children[d.dock].getBoundingClientRect();wire(d.x,d.y,r.x+r.width/2,r.y+r.height/2)}
+ [...dockButtons].forEach((b,i)=>{b.classList.toggle('can-drop',!state.docks[i]);b.classList.toggle('drop-over',i===d.dock&&!state.docks[i])});
+ $ui.wire.hidden=true;if(d.dock>=0&&!state.docks[d.dock]){const r=dockButtons[d.dock].getBoundingClientRect();wire(d.x,d.y,r.x+r.width/2,r.y+r.height/2)}
 });
 function endDrag(e,ok){
  const d=drag;if(!d||e.pointerId!==d.id)return;drag=null;if(!d.held)return;
- [...$ui.dock.children].forEach(b=>b.classList.remove('can-drop','drop-over'));$ui.wire.hidden=true;
+ [...dockButtons].forEach(b=>b.classList.remove('can-drop','drop-over'));$ui.wire.hidden=true;
  if(ok&&d.dock>=0&&dispatch(d.ship.id,d.dock)){
-  $ui.float.hidden=true;const r=$ui.dock.children[d.dock].getBoundingClientRect();wire(d.sx,d.sy,r.x+r.width/2,r.y+r.height/2,false);solidWire=scene+.28;
+  $ui.float.hidden=true;const r=dockButtons[d.dock].getBoundingClientRect();wire(d.sx,d.sy,r.x+r.width/2,r.y+r.height/2,false);solidWire=scene+.28;
   return; // Drag lets a player keep dispatching; tap the berth here to enter service.
  }
  const r=d.from.getBoundingClientRect();const a=!reduce.matches&&$ui.float.animate?.([{left:(d.x+5)+'px',top:(d.y-16)+'px'},{left:r.x+'px',top:r.y+'px',opacity:.25}],{duration:170,easing:'ease-out'});
@@ -374,20 +392,23 @@ function setVendor(i){
  $ui.store.querySelectorAll('.port-price').forEach(n=>{n.classList.remove('changed');void n.offsetWidth;n.classList.add('changed')});renderDirty=true;
 }
 document.querySelectorAll('[data-vendor]').forEach((n,i)=>n.onclick=()=>setVendor(i));
-function offerBuy(i){
+function offerBuy(i,fromShip=false){
  if(mode!=='play'||intro||!Number.isInteger(i)||i<0||i>2)return;
- const price=prices[chosenVendor][i];if(state.credits<price){
+ const price=prices[chosenVendor][i],short=price-state.credits;if(short>0&&!fromShip){
   const label=$ui.store.children[i].querySelector('.port-price');label.classList.remove('shake');void label.offsetWidth;label.classList.add('shake');tone(154,117);return;
  }
- const item=goods[i];buyItem={i,item,price,button:$ui.store.children[i]}; mode='buy';beginCheckout=0;holdProgress=0;holdId=null;
+ const item=goods[i];buyItem={i,item,price,button:$ui.store.children[i]}; mode='buy';trafficPause(true);beginCheckout=0;holdProgress=0;holdId=null;
  $ui.console.classList.add('paused');$ui.console.inert=true;$ui.overlay.hidden=false;$ui.buy.hidden=false;
  Q('#port-hold').style.setProperty('--hold','0');
- Q('#port-hold').textContent='長押しで仕入れ';Q('#port-hold').disabled=false;Q('#port-buy-key').hidden=!keyboardMode;Q('#port-buy-key').disabled=false;Q('#port-buy-back').disabled=false;
- Q('#port-buy-title').textContent=look[item]+' ×'+batch[i];Q('#port-buy-detail').textContent=price+' cr　→　残り '+(state.credits-price)+' cr';
- Q('#port-hold').focus({preventScroll:true});
+ Q('#port-hold').textContent='長押しで購入';Q('#port-hold').disabled=short>0;Q('#port-buy-key').hidden=false;Q('#port-buy-key').disabled=short>0;Q('#port-buy-back').disabled=false;
+ Q('#port-buy-title').textContent=look[item]+' ×'+batch[i];Q('#port-buy-detail').textContent=short>0?price+' cr ／ あと '+short+' cr':price+' cr → 残り '+(state.credits-price)+' cr';
+ Q(short>0?'#port-buy-back':'#port-buy-key').focus({preventScroll:true});
 }
 function closeBuy(){
- if(mode!=='buy'||beginCheckout)return;const b=buyItem?.button;buyItem=null;holdId=null;mode='play';$ui.console.classList.remove('paused');$ui.console.inert=false;$ui.overlay.hidden=true;$ui.buy.hidden=true;b?.focus({preventScroll:true});renderDirty=true;
+ if(mode!=='buy'||beginCheckout)return;const b=buyItem?.button, job=pendingWork;pendingWork=null;buyItem=null;holdId=null;mode='play';trafficPause(false);$ui.console.classList.remove('paused');$ui.console.inert=false;$ui.overlay.hidden=true;$ui.buy.hidden=true;renderDirty=true;
+ const ship=job?state.docks[job.berth]:null;
+ if(ship?.id===job?.id&&ship?.service==='docked'){state.shopFocus=-1;if(job.task==='priority'){openService(ship,job.choice);return}render();dockButtons[job.berth]?.focus({preventScroll:true});return}
+ b?.focus({preventScroll:true});
 }
 Q('#port-buy-back').onclick=closeBuy;
 const hold=Q('#port-hold');
@@ -411,7 +432,7 @@ function showReports(){
 }
 Q('#port-title-report').onclick=showReports;Q('#port-hud-report').onclick=showReports;
 function advance(dt){
- if(!['play','service','buy'].includes(mode))return;
+ if(mode!=='play')return;
  if(intro){
   if(intro===4){introWork=Math.max(0,introWork-dt);const ship=state.docks[0];ship.rem=introWork;renderDirty=true;if(introWork===0){ship.service='ready';tone(550,720,.10);setIntro(5)}}
   else if(intro===6){introWork=Math.max(0,introWork-dt);if(introWork===0){learned=true;Q('#port-title-report').hidden=false;init(false);say('管制開始！',1.3)}}
@@ -451,8 +472,12 @@ function render(){
  const incomingAtEdge=!intro&&n===3&&next<3&&mode==='play';
  $ui.edge.hidden=!incomingAtEdge;Q('#port-incoming').style.visibility=incomingAtEdge?'hidden':'visible';
  if(incomingAtEdge)$ui.edge.textContent='▸ 次便 '+Math.ceil(next)+'s ／ 到着枠が満杯';
- [...$ui.dock.children].forEach((b,i)=>{
-  const ship=state.docks[i];let main=b.querySelector('strong'),detail=b.querySelector('em'),remain=b.querySelector('.remain i');
+ [...dockButtons].forEach((b,i)=>{
+  const ship=state.docks[i];let main=b.querySelector('.port-shipname'),detail=b.querySelector('em'),remain=b.querySelector('.remain i');
+  const manifest=b.querySelector('.port-manifest');manifest.hidden=!ship;
+  if(ship&&manifest.dataset.kind!==ship.request){manifest.dataset.kind=ship.request;manifest.className='port-manifest '+gc(ship.request);manifest.innerHTML=visualSymbol(ship.request)}
+  const isDocked=ship?.service==='docked',armed=isDocked&&scene>=ship.armAt,need=armed&&state[vals[ship.request]]<1;
+  const opt=priorityButtons[i];opt.hidden=!!intro||!armed; b.classList.toggle('offer',!intro&&armed&&!need);b.classList.toggle('short',!intro&&!!need);
   const working=ship?.service==='active',blank=b.querySelector('.port-socket'),parked=b.querySelector('.port-parked'),fill=b.querySelector('.port-fill'),indicator=b.querySelector('.port-status'),pace=b.querySelector('.port-speedbar');
   const compare=!!match&&!ship&&!intro, standardized=goods[i]===match?.request?4.2:6.1;
   pace.hidden=!compare;if(compare)pace.querySelector('i').style.width=(standardized/6.1*100)+'%';
@@ -467,16 +492,16 @@ function render(){
   const p=ship?.service==='active'?Math.max(0,ship.rem/ship.total):0;remain.style.width=p*100+'%';fill.style.setProperty('--fuel-fill',(1-p)*100+'%');
   const tag=intro?
   (i!==0?'':intro===2?'接岸 ▸':intro===3?'給油 ▸':intro===4?'':intro===5?'出港 ▸':''):
-  (ship?.service==='ready'?'出港 ▸':ship?.service==='active'?Math.ceil(ship.rem)+'s':ship?'補給 ▸':'');
+  (ship?.service==='ready'?'出港 ▸':ship?.service==='active'?Math.ceil(ship.rem)+'s':ship?(armed?(need?'あと1個':'補給 1'):'接岸中'):'');
   if(working){indicator.className='port-status busy';indicator.textContent='';indicator.style.setProperty('--a',1-p)}
   else{const going=ship?.service==='ready'||(!ship&&state.departed?.[i]>scene);indicator.className='port-status '+(going?'win':ship?'occupied':'blank');indicator.textContent=going?'»':ship?'·':''}
   detail.textContent=compare?standardized.toFixed(1)+'s':tag;
-  b.setAttribute('aria-label','ドック'+(i+1)+' '+look[goods[i]]+' '+(main.textContent||'空き')+' '+(compare?standardized.toFixed(1)+'秒':tag))
+  b.setAttribute('aria-label','ドック'+(i+1)+' '+look[goods[i]]+' '+(main.textContent||'空き')+(ship?' 要求 '+look[ship.request]:'')+' '+(compare?standardized.toFixed(1)+'秒':tag))
  });
  const matchSk=Q('#port-match-lane'), mi=match?goods.indexOf(match.request):-1;
  matchSk.hidden=true;
  if(mode==='play'&&mi>=0&&!state.docks[mi]&&!drag?.held){
-  const src=$ui.queue.querySelector('[data-ship="'+match.id+'"]')?.querySelector('.port-request'), dst=$ui.dock.children[mi]?.querySelector('.port-berth');
+  const src=$ui.queue.querySelector('[data-ship="'+match.id+'"]')?.querySelector('.port-request'), dst=dockButtons[mi]?.querySelector('.port-berth');
   if(src&&dst){const a=src.getBoundingClientRect(),b=dst.getBoundingClientRect(),x=a.x+a.width/2,y=a.y+a.height,m=Math.round((y+b.y)/2),z=b.x+b.width/2;
    Q('#port-match-line').setAttribute('d','M'+x+' '+y+' V'+m+' H'+z+' V'+(b.y+1));matchSk.hidden=false;}
  }
@@ -501,7 +526,7 @@ function render(){
 }
 function finish(ok){
  if(mode==='end'||mode==='done')return;
- if(mode==='service')window.portService?.dismiss?.();clearCraft();trafficPause(true);activeShip=null;holdId=null;beginCheckout=0;buyItem=null;
+ if(mode==='service')window.portService?.dismiss?.();pendingWork=null;clearCraft();trafficPause(true);activeShip=null;holdId=null;beginCheckout=0;buyItem=null;
  if(drag)endDrag({pointerId:drag.id},false);
  let bonus=ok?state.served*35+(5-state.missed)*45:0, total=state.score+bonus,rank=total>=2100?'S':total>=1400?'A':total>=800?'B':'C';
  runs.unshift({score:total,served:state.served,missed:state.missed,sec:state.elapsed,clear:ok,frames:state.frames.slice(),events:state.events.slice()});if(runs.length>8)runs.pop();
@@ -722,7 +747,7 @@ function dismiss(){
 }
 function close(){if(!shown)return;const done=onClose;dismiss();if(done)done();if(focusBack?.isConnected&&!focusBack.disabled)focusBack.focus({preventScroll:true})}
 q('#ps-x').onclick=q('#ps-cancel').onclick=close;
-q('#ps-needstock').onclick=()=>state?.restock?.();
+q('#ps-needstock').onclick=()=>state?.restock?.(choice);
 q('#ps-commit').onclick=()=>{
  if(locked||!ship||q('#ps-commit').disabled)return;
  const before=available(),need=amount();
@@ -734,7 +759,7 @@ q('#ps-commit').onclick=()=>{
  q('#ps-pending').textContent='割当確定：'+info[ship.request][1]+' '+need+'個';renderStock(before,need,true);
  q('#ps-commit').textContent='作業開始 ✓';q('#ps-commit').disabled=true;
  q('#ps-range').disabled=true;buttons.forEach(b=>b.disabled=true);
- afterTimer=setTimeout(close,reduced.matches?280:420);
+ afterTimer=setTimeout(close,reduced.matches?180:255);
 };
 root.addEventListener('keydown',e=>{
  e.stopPropagation();
@@ -747,7 +772,7 @@ root.addEventListener('keydown',e=>{
 function open(nextShip,nextState,action,closed){
  if(!nextShip||!info[nextShip.request]||!nextState||typeof action!=='function')return;
  dismiss();focusBack=document.activeElement;ship=nextShip;state=nextState;commit=action;onClose=closed;
- choice=0;locked=false;lastErr='';shown=true;root.hidden=false;
+ choice=nextState.choice===1?1:0;locked=false;lastErr='';shown=true;root.hidden=false;
  q('#ps-range').disabled=false;buttons.forEach(b=>b.disabled=false);
  q('#ps-tray').classList.remove('confirmed');q('#ps-check').hidden=true;q('#ps-commit').textContent='作業開始';list.scrollTop=0;card.scrollTop=0;
  setTab('job');render();keepVisible();tabs[0].focus({preventScroll:true});
